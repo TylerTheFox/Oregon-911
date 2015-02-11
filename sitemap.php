@@ -9,47 +9,47 @@ echo("\n");
     if ($_GET['units'] != "1") {
     ?>
     <url>
-        <loc>https://cad.oregon911.net/</loc>
+        <loc>http://cad.oregon911.net/</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>https://cad.oregon911.net/call-list</loc>
+        <loc>http://cad.oregon911.net/call-list</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>https://cad.oregon911.net/search</loc>
+        <loc>http://cad.oregon911.net/search</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>https://cad.oregon911.net/stastics</loc>
+        <loc>http://cad.oregon911.net/stastics</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>https://cad.oregon911.net/statistics/maps</loc>
+        <loc>http://cad.oregon911.net/statistics/maps</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>https://cad.oregon911.net/statistics/tables</loc>
+        <loc>http://cad.oregon911.net/statistics/tables</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>https://cad.oregon911.net/statistics/graphs</loc>
+        <loc>http://cad.oregon911.net/statistics/graphs</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>https://cad.oregon911.net/units</loc>
+        <loc>http://cad.oregon911.net/call</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>https://cad.oregon911.net/unitinfo</loc>
+        <loc>http://cad.oregon911.net/unitinfo</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>https://cad.oregon911.net/station</loc>
+        <loc>http://cad.oregon911.net/station</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>https://cad.oregon911.net/agency</loc>
+        <loc>http://cad.oregon911.net/agency</loc>
         <changefreq>always</changefreq>
     </url>
     <?
@@ -59,7 +59,7 @@ echo("\n");
     while ($rows = $result->fetch_assoc()) {
     ?>
     <url>
-        <loc><?PHP echo(htmlspecialchars("https://cad.oregon911.net/units?call=" . $rows['GUID'] . "&county=" . $rows['county'])); ?></loc>
+        <loc><?PHP echo(htmlspecialchars("http://cad.oregon911.net/call?call=" . $rows['GUID'] . "&county=" . $rows['county'])); ?></loc>
         <changefreq>always</changefreq>
     </url>
     <?
@@ -70,7 +70,7 @@ echo("\n");
     while ($rows = $result->fetch_assoc()) {
     ?>
     <url>
-        <loc><?PHP echo(htmlspecialchars("https://cad.oregon911.net/units?call=" . $rows['GUID'] . "&county=" . $rows['county'])); ?></loc>
+        <loc><?PHP echo(htmlspecialchars("https://cad.oregon911.net/call?call=" . $rows['GUID'] . "&county=" . $rows['county'])); ?></loc>
         <changefreq>never</changefreq>
     </url>
     <?

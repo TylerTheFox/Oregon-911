@@ -416,7 +416,10 @@ if ($found) {
         <meta name="author" content="http://brandanlasley.com" />
         <meta name="viewport" content="width=device-width initial-scale=1.0 maximum-scale=1.0 user-scalable=yes" />
         <title>Oregon 911 - Incident</title>
+
+
         <meta name="viewport" content="width=device-width, initial-scale=1">
+       <meta name="twitter:card" content="summary_large_image">
         <?php
         if (($county == 'W') && ($type == 'P')) {
             ?><meta name="twitter:site" content="@Washco_Police"><?php
@@ -441,7 +444,7 @@ if ($found) {
               echo ($units);
               ?>">
         <meta name="twitter:image:src" content="<?php
-        echo ("./call?call=$GUID&county=$county&img=Y");
+        echo ("http://cad.oregon911.net/call?call=$GUID&county=$county&img=Y");
         ?>">
 
         <style type="text/css">
