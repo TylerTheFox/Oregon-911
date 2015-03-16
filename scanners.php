@@ -32,9 +32,9 @@ if (!empty($_GET['AJAX_REFRESH'])) {
         // $row should hold the data you selected
         $file = $db->sql_fetchrow($result);
         ?>
-        <audio id="player2" src="https://radio.oregon911.net/archive/radio1<?PHP echo($file['file_short']) ?>" type="audio/mp3" controls="controls"></audio>	
+        <audio id="player2" src="http://radio.oregon911.net/archive/radio1<?PHP echo($file['file_short']) ?>" type="audio/mp3" controls="controls"></audio>	
         <br>
-        <a href="https://radio.oregon911.net/archive/radio1<?PHP echo($file['file_short']) ?>">Download</a>
+        <a href="http://radio.oregon911.net/archive/radio1<?PHP echo($file['file_short']) ?>">Download</a>
         <?PHP
         exit;
     }
@@ -171,7 +171,7 @@ if (!empty($_GET['AJAX_REFRESH'])) {
                                         </script>
                                     </center>
                                     <!-- set up player container with background color -->
-                                    <p> Serving Beaverton, Hillsboro, Sheriff's Office, South Citires </p>
+                                    <p> Serving Beaverton, Hillsboro, Sheriff's Office, and South Cities </p>
                                     <a href="http://server2.oregon911.net/radio/radio1" target="_blank">Play (Mobile)</a>
                                     <br>
                                 </details>

@@ -10,7 +10,7 @@ $user->session_begin();
 $auth->acl($user->data);
 
 if ($user->data['username'] == 'Anonymous' or $user->data['is_bot']) {
-    header("location: https://cad.oregon911.net/login?redirect=" . urlencode(GetURL()));
+    header("location: http://cad.oregon911.net/login?redirect=" . urlencode(GetURL()));
 }
 
 function GetURL() {

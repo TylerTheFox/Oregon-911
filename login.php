@@ -125,7 +125,7 @@ if ($user->data['username'] == 'Anonymous' OR $user->data['is_bot']) {
                                 }
                                 ?>" />
                             </form>
-                            <a title="Register" href="https://www.oregon911.net/discussion/ucp.php?mode=register">Register</a>
+                            <a title="Register" href="http://www.oregon911.net/discussion/ucp.php?mode=register">Register</a>
 
                             <!-- ====================================================================================== -->
                             <?PHP

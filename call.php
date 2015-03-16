@@ -33,12 +33,12 @@ if ((isset($_POST['entry'])) OR ( isset($_POST['priorityreq']))) {
                     );
                     $sql = 'REPLACE INTO `phpbb_calllog_priority` ' . $db->sql_build_array('INSERT', $sql_arr);
                     $db->sql_query($sql);
-                    header("location: https://cad.oregon911.net/units?call=" . $safeGUID . "&county=" . $safecounty . "&type=" . $initial_type);
+                    header("location: http://cad.oregon911.net/units?call=" . $safeGUID . "&county=" . $safecounty . "&type=" . $initial_type);
                 }
             } elseif ($_POST['priorityreq'] == '0' AND ( isset($_POST['priorityreq']))) {
                 $sql = 'DELETE FROM `phpbb_calllog_priority` WHERE FK_user_id = \'' . $user->data['user_id'] . '\' AND FK_GUID = \'' . $safeGUID . '\' AND FK_county =\'' . $safecounty . '\'';
                 $db->sql_query($sql);
-                header("location: https://cad.oregon911.net/units?call=" . $safeGUID . "&county=" . $safecounty . "&type=" . $initial_type);
+                header("location: http://cad.oregon911.net/units?call=" . $safeGUID . "&county=" . $safecounty . "&type=" . $initial_type);
             } else {
                 if ($user->data['user_id'] == $prirow['FK_user_id']) {
                     $safeentry = $db->sql_escape(strip_tags($_POST["entry"]));
@@ -76,9 +76,9 @@ if ((isset($_POST['entry'])) OR ( isset($_POST['priorityreq']))) {
                             if (strlen($safeentry) > 110) {
                                 $safeentry = substr($safeentry, 0, 110) . '...';
                             }
-                            file_get_contents("http://www.api.oregon911.net/api/1.0/?method=cadentriestwitter&message=" . (urlencode($safeentry . " https://cad.oregon911.net/units?call=" . $safeGUID . "&county=" . $safecounty . "&type=" . $initial_type)) . "&lat=" . $callrow['lat'] . "&lon=" . $callrow['lon'] . "&type=JSON&key=$key");
+                            file_get_contents("http://www.api.oregon911.net/api/1.0/?method=cadentriestwitter&message=" . (urlencode($safeentry . " http://cad.oregon911.net/units?call=" . $safeGUID . "&county=" . $safecounty . "&type=" . $initial_type)) . "&lat=" . $callrow['lat'] . "&lon=" . $callrow['lon'] . "&type=JSON&key=$key");
                         }
-                        header("location: https://cad.oregon911.net/units?call=" . $safeGUID . "&county=" . $safecounty . "&type=" . $initial_type);
+                        header("location: http://cad.oregon911.net/units?call=" . $safeGUID . "&county=" . $safecounty . "&type=" . $initial_type);
                         break;
                     }
                 }

@@ -25,7 +25,7 @@ if (isset($_POST['maplat']) AND isset($_POST['maplng'])) {
             }
 
             if (($validphone == false) and ( (bool) $safetext == true)) {
-                die('<p>Phone number is either missing from your profile or is invalid, please enter your phone number <a href="https://www.oregon911.net/discussion/ucp.php?i=173">Here</a> without hyphens in the following format 0000000000 and make sure you select a carrier!</p><a href="places">Click here to go back</a>');
+                die('<p>Phone number is either missing from your profile or is invalid, please enter your phone number <a href="http://www.oregon911.net/discussion/ucp.php?i=173">Here</a> without hyphens in the following format 0000000000 and make sure you select a carrier!</p><a href="places">Click here to go back</a>');
             } else {
                 if (strlen($safename) > 0 && strlen($safedistance) > 0) {
                     //Array with the data to insert
@@ -185,7 +185,7 @@ if (ISSET($_GET['del'])) {
     <body>
         <div id="wccca-page-wrapper">
             <h1> Places/Alerts </h1>
-            <p><a href="https://cad.oregon911.net">Back to call map</a></p>
+            <p><a href="http://cad.oregon911.net">Back to call map</a></p>
 
             <center>
                 <?PHP
@@ -233,7 +233,7 @@ if (ISSET($_GET['del'])) {
                 $sql = "SELECT `phpbb_places`.name, `phpbb_places`.distance FROM `phpbb_places` JOIN `phpbb_users` ON FK_user_id = user_id WHERE `phpbb_places`.FK_user_id  = '" . $user->data['user_id'] . "'";
                 $result = $db->sql_query($sql);
                 while ($row = $result->fetch_assoc()) {
-                    echo '<tr><th>' . htmlspecialchars($row['name']) . '</th><th>' . htmlspecialchars($row['distance']) . '</th><th><a href="places?del=' . htmlspecialchars($row['name']) . '"><img style="border:0;" src="https://cad.oregon911.net/images/WEB/del.png" alt="Delete" width="20" height="20"></a></th></tr>';
+                    echo '<tr><th>' . htmlspecialchars($row['name']) . '</th><th>' . htmlspecialchars($row['distance']) . '</th><th><a href="places?del=' . htmlspecialchars($row['name']) . '"><img style="border:0;" src="http://cad.oregon911.net/images/WEB/del.png" alt="Delete" width="20" height="20"></a></th></tr>';
                 }
                 echo '</table>';
                 ?>

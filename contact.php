@@ -49,9 +49,9 @@ require_once("google.php");
 
             <?PHP
             if ($_GET['frame'] == "bug") {
-                ?><iframe frameborder="0" style="color:black; width:100%; height:100vh; position: absolute;" src="https://bugs.oregon911.net/oregon911cad/issues/last/30/days"></iframe><?PHP
+                ?><iframe frameborder="0" style="color:black; width:100%; height:100vh; position: absolute;" src="http://bugs.oregon911.net/oregon911cad/issues/last/30/days"></iframe><?PHP
             } elseif ($_GET['frame'] == "discussion") {
-                ?><iframe frameborder="0" style="color:black; width:100%; height:100vh; position: absolute;" src="https://oregon911.net/discussion/"></iframe><?PHP
+                ?><iframe frameborder="0" style="color:black; width:100%; height:100vh; position: absolute;" src="http://oregon911.net/discussion/"></iframe><?PHP
             } else {
                 echo("No Programming.");
             }

@@ -70,7 +70,7 @@ echo("\n");
     while ($rows = $result->fetch_assoc()) {
     ?>
     <url>
-        <loc><?PHP echo(htmlspecialchars("https://cad.oregon911.net/call?call=" . $rows['GUID'] . "&county=" . $rows['county'])); ?></loc>
+        <loc><?PHP echo(htmlspecialchars("http://cad.oregon911.net/call?call=" . $rows['GUID'] . "&county=" . $rows['county'])); ?></loc>
         <changefreq>never</changefreq>
     </url>
     <?
@@ -81,7 +81,7 @@ echo("\n");
     while ($rows = $result->fetch_assoc()) {
     ?>
     <url>
-        <loc><?PHP echo(htmlspecialchars("https://cad.oregon911.net/station?station=" . $rows['ABBV'] . "&county=" . $rows['county'])); ?></loc>
+        <loc><?PHP echo(htmlspecialchars("http://cad.oregon911.net/station?station=" . $rows['ABBV'] . "&county=" . $rows['county'])); ?></loc>
         <changefreq>always</changefreq>
     </url>
     <?
@@ -93,7 +93,7 @@ echo("\n");
     while ($rows = $result->fetch_assoc()) {
     ?>
     <url>
-        <loc><?PHP echo(htmlspecialchars("https://cad.oregon911.net/unitinfo?unit=" . $rows['unit'] . "&county=" . $rows['county'])); ?></loc>
+        <loc><?PHP echo(htmlspecialchars("http://cad.oregon911.net/unitinfo?unit=" . $rows['unit'] . "&county=" . $rows['county'])); ?></loc>
         <changefreq>always</changefreq>
     </url>
     <?
@@ -104,7 +104,7 @@ echo("\n");
     while ($rows = $result->fetch_assoc()) {
     ?>
     <url>
-        <loc><?PHP echo(htmlspecialchars("https://cad.oregon911.net/agency?agency=" . $rows['AGENCY'] . "&county=" . $rows['county'])); ?></loc>
+        <loc><?PHP echo(htmlspecialchars("http://cad.oregon911.net/agency?agency=" . $rows['AGENCY'] . "&county=" . $rows['county'])); ?></loc>
         <changefreq>always</changefreq>
     </url>
     <?
@@ -120,7 +120,7 @@ echo("\n");
     while ($rows = $result->fetch_assoc()) {
     ?>
     <url>
-        <loc><?PHP echo(htmlspecialchars("https://cad.oregon911.net/units?call=" . $rows['GUID'] . "&county=" . $rows['county'])); ?></loc>
+        <loc><?PHP echo(htmlspecialchars("http://cad.oregon911.net/units?call=" . $rows['GUID'] . "&county=" . $rows['county'])); ?></loc>
         <changefreq>never</changefreq>
     </url>
     <?

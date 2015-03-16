@@ -139,7 +139,7 @@ $station = strtoupper($db->sql_escape(strip_tags($_GET['station'])));
                                         if ($rows['station'] == null) {
                                             echo ("Unknown");
                                         } else {
-                                            echo ("<a href=\"https://cad.oregon911.net/agency?agency=" . rawurlencode($rows['agency']) . "&county=" . $county . "\">" . $rows['agency'] . "</a>");
+                                            echo ("<a href=\"http://cad.oregon911.net/agency?agency=" . rawurlencode($rows['agency']) . "&county=" . $county . "\">" . $rows['agency'] . "</a>");
                                         }
                                         ?></td>
                                 </tr>
@@ -196,7 +196,7 @@ $station = strtoupper($db->sql_escape(strip_tags($_GET['station'])));
                             $sql = "select * from oregon911_cad.`pdx911_unit_table` AS S WHERE S.ABBV = '" . $station . "' AND S.County = '" . $county . "';";
                             $result = $db->sql_query($sql);
                             while ($row = $result->fetch_assoc()) {
-                                echo '<tr><th><a href="https://cad.oregon911.net/unitinfo?unit=' . $row['UNIT'] . '&county=' . $county . '">' . $row['UNIT'] . '</a></th></tr>';
+                                echo '<tr><th><a href="http://cad.oregon911.net/unitinfo?unit=' . $row['UNIT'] . '&county=' . $county . '">' . $row['UNIT'] . '</a></th></tr>';
                             }
                             echo '</table>';
                             ?>

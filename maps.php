@@ -86,7 +86,7 @@ require_once("google.php");
         '<h3> Address: ' . $rows['address'] . ' </h3>' .
         '<p>Station: ' . $rows['station'] . '</p>' .
         '<p> Time: ' . $rows['timestamp'] . ' </p>');
-        echo('<a href="https://cad.oregon911.net/units?call=' . $rows['GUID'] . '&county=' . $rows['county'] . '" target="_blank">More Info</a></div>\'' .
+        echo('<a href="http://cad.oregon911.net/units?call=' . $rows['GUID'] . '&county=' . $rows['county'] . '" target="_blank">More Info</a></div>\'' .
         ', lat:' . $rows['lat'] . ', lng:' . $rows['lon'] . ', icon:\'' . $rows['icon'] . '\' }');
         $CallIDM++;
     }
@@ -158,7 +158,7 @@ require_once("google.php");
 
                     var ajaxObj = {
                         options: {
-                            url: "https://cad.oregon911.net/map",
+                            url: "http://cad.oregon911.net/map",
                             dataType: "json"
                         },
                         delay: 5000,

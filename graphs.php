@@ -743,9 +743,10 @@ $mode = $_GET['mode'];
                             <div class="container">
                                 <p class="lead">404. Page Not Found :(</p>
                             </div><!-- /.container -->
+
                             <?php
                         }
-                        ?>
+?>
 
                         <!--====================================================================================== -->
                         <?PHP
@@ -753,12 +754,13 @@ $mode = $_GET['mode'];
                             ?>
                         </div>
 
-                    <?PHP } ?>
+                        <?PHP
+                    }
+                    ?>
                 </div>
             </div>
 
             <?PHP include ("./inc/nav.php");
-            echo '<p>Copyright &copy; ' . date("Y") . ' Brandan Lasley. All Rights Reserved.</p>';
             ?>
 
         </div>
@@ -766,7 +768,7 @@ $mode = $_GET['mode'];
                                         $(function () {
                                         $('nav#menu').mmenu();
                                         });</script>
-<?PHP echo($analytics); ?>
+        <?PHP echo($analytics); ?>
         <script type="text/javascript" src="//www.google.com/jsapi"></script>
     </body>
 </html>

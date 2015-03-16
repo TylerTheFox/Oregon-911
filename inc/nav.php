@@ -47,12 +47,14 @@
 </li>
 <li><a>Contact</a>
     <ul>
+        <li><a href = "http://twitter.com/Brandantl">@Brandantl</a></li>
+        <li><a href = "https://github.com/Brandantl/Oregon-911">Githhub (Website)</a></li>
+        <li><a href = "https://github.com/Brandantl/Oregon-911-Backbone">Githhub (Backbone)</a></li>
         <li><a href = "./contact?frame=bug">Report Bug</a></li>
         <li><a href = "./contact?frame=discussion">Discussion Board</a>
         </li>
     </ul>
 </li>
-<li><a href = "http://media.oregon911.net">Media</a></li>
 <?PHP
 if ($LoggedIn) {
     echo('        <li><a href = "./logout">Logout</a></li>');
