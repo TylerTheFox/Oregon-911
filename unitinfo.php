@@ -470,7 +470,9 @@ $result = $db->sql_query($sql);
 
 $Moutput = "";
 while ($row = $result->fetch_assoc()) {
-    $Moutput .= "[Date.UTC(" . $row['YEAR'] . ",  " . ($row['MONTH'] - 1) . ", " . $row['DAY'] . "), " . $row['miles'] . "   ],";
+    if ($row['miles'] < 200) {
+        $Moutput .= "[Date.UTC(" . $row['YEAR'] . ",  " . ($row['MONTH'] - 1) . ", " . $row['DAY'] . "), " . $row['miles'] . "   ],";
+    }
 }
 ?>
                             data: [

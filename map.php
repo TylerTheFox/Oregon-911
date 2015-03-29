@@ -10,79 +10,22 @@ require_once("loggedin.php");
 $CallIDM = 1;
 $CAD911 = array();
 
-// Stations
-$sql = "SELECT * FROM `oregon911_cad`.`pdx911_stations` WHERE county != 'M' ORDER BY ID";
-$result = $db->sql_query($sql);
-while ($rows = $result->fetch_assoc()) {
-    if ($rows['ABBV'] != "UNK") {
-        $station = $rows['ABBV'];
-    } else {
-        $station = $rows['STATION'];
-    }
-
-    $OUTPUT = '';
-    $OUTPUT .= '<table style="width:100%;">';
-    $OUTPUT .= '<tr><th>Date</th><th>Call #</th><th>Call Type</th><th>Address</th></tr>';
-    $sql = "SELECT `oregon911_cad`.`pdx911_archive`.* FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county LEFT JOIN `oregon911_cad`.`pdx911_stations` AS S ON `oregon911_cad`.`pdx911_units`.station = S.ABBV and `oregon911_cad`.`pdx911_units`.county = S.county WHERE onscene != '00:00:00' AND enroute != '00:00:00' AND `oregon911_cad`.`pdx911_units`.county = '" . $rows['COUNTY'] . "' AND S.ABBV = '" . $rows['ABBV'] . "' order by timestamp DESC limit 5";
-    
-    // Run the query 
-    $result2 = $db->sql_query($sql);
-
-    while ($row = $result2->fetch_assoc()) {
-        $OUTPUT .= '<tr><th>' . $row['timestamp'] . '</th><th><a href="./units?call=' . $row['GUID'] . '&county=' . $row['county'] . '">' . $row['GUID'] . '</a></th>'
-                . '<th><a href="./search?county=' . $row['county'] . '&calltype=' . urlencode($row['callSum']) . '">' . $row['callSum'] . '</a></th>'
-                . '</th><th><a href="./search?county=' . $row['county'] . '&address=' . urlencode($row['address']) . '">' . $row['address'] . '</a></th></tr>';
-    }
-    
-    
-    $CAD911['loc' . $CallIDM] = array(
-        'info' => "<h1>Fire Station: " . $station . "</h1><h3>Agency: " . $rows['DISTRICT'] . "</h1><p>City: " . $rows['CITY'] . "</p><p>Address: " . $rows['ADDRESS'] . "</p>" . $OUTPUT,
-        'lat' => $rows['LAT'],
-        'lng' => $rows['LON'],
-        'icon' => "images/MISC/firedept.png"
-    );
-    $CallIDM++;
-}
-
-// Hospital
-$sql = "SELECT * FROM `oregon911_cad`.`pdx911_hospitals` ORDER BY ID";
-$result = $db->sql_query($sql);
-while ($rows = $result->fetch_assoc()) {
-    $CAD911['loc' . $CallIDM] = array(
-        'info' => "Hospital: " . $rows['NAME'] . " City: " . $rows['CITY'] . " Address: " . $rows['ADDRESS'],
-        'lat' => $rows['LAT'],
-        'lng' => $rows['LON'],
-        'icon' => "images/MISC/hospital.png"
-    );
-    $CallIDM++;
-}
-
-// Airports
-$sql = "SELECT * FROM `oregon911_cad`.`pdx911_airports` ORDER BY ID";
-$result = $db->sql_query($sql);
-while ($rows = $result->fetch_assoc()) {
-    $CAD911['loc' . $CallIDM] = array(
-        'info' => "Airport: " . $rows['NAME'] . " Address: " . $rows['ADDRESS'],
-        'lat' => $rows['LAT'],
-        'lng' => $rows['LON'],
-        'icon' => "images/MISC/airport.png"
-    );
-    $CallIDM++;
-}
-
 // Lifeflight
 $sql = "SELECT * FROM `oregon911_cad`.`pdx911_lifeflight` ORDER BY ID";
 $result = $db->sql_query($sql);
 while ($rows = $result->fetch_assoc()) {
-    $CAD911['loc' . $CallIDM] = array(
+    $CAD911['stadic' . $CallIDM] = array(
         'info' => "Name: " . $rows['NAME'] . " Type: " . $rows['UTYPE'] . " Address: " . $rows['ADDRESS'],
         'lat' => $rows['LAT'],
         'lng' => $rows['LON'],
+        'iconW' => 11,
+        'iconH' => 11,
+        'label' => false,
+        'labelname' => '',
         'icon' => "images/MISC/lifeflight.png"
     );
     $CallIDM++;
 }
-
 
 // Calls
 $sql = "SELECT * FROM `oregon911_cad`.`pdx911_calls` WHERE county != 'M' ORDER BY ID";
@@ -96,15 +39,19 @@ while ($rows = $result->fetch_assoc()) {
     }
     $info_string .= '</table>';
     $info_string .= ('<a href="./units?call=' . $rows['GUID'] . '&county=' . $rows['county'] . '" target="_blank">More Info</a></div>');
-
-    $CAD911['loc' . $CallIDM] = array(
+    //if ($rows['ID'] != 31682) {
+    $CAD911['loc' . $rows['ID']] = array(
         'info' => $info_string,
         'lat' => $rows['lat'],
         'lng' => $rows['lon'],
+        'iconW' => 32,
+        'iconH' => 37,
+        'label' => true,
+        'labelname' => $rows['callSum'],
         'icon' => $rows['icon']
     );
-    $CallIDM++;
-} 
+    //}
+}
 
 
 echo json_encode($CAD911);

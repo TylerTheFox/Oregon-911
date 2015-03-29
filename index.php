@@ -15,12 +15,12 @@ require_once("google.php");
 
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
         <script type="text/javascript" src="./src/js/jquery.mmenu.min.all.js"></script>
-        <style>
-            html, body { height:100%; }
-        </style>
+        <script type="text/javascript" src="./js/leaflet.js"></script>
+        <script type="text/javascript" src="./js/Leaflet.label.js"></script>
+        <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-label/v0.2.1/leaflet.label.css' rel='stylesheet' />
 
     </head>
-    <body style="overflow:hidden;">
+    <body>
         <div id="page">
             <div class="header">
                 <a href="#menu"></a>
@@ -47,7 +47,13 @@ require_once("google.php");
                     <?PHP
                 }
                 ?>
+
+
+
                 <div id='map' style="height:100vh; width: 100%; overflow:hidden;"></div>
+
+
+
             </div>
             <?PHP include ("./inc/nav.php"); ?>
         </div>
@@ -56,165 +62,155 @@ require_once("google.php");
                 $('nav#menu').mmenu();
             });
         </script>
-        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-        <?PHP
-        if (!$mobile) {
-            ?>
-            <script type='text/javascript' src="https://maps.google.com/maps/api/js?libraries=adsense&amp;sensor=false&amp;extn=.js"></script>
-            <?PHP
-        } else {
-            ?>
-            <script type='text/javascript' src="https://maps.google.com/maps/api/js?sensor=false"></script>
-            <?PHP
-        }
-        ?>
-        <script async type='text/javascript'>
-            var locations = {};
-            var locs = {
-<?PHP
-$CallIDM = 1;
-
-// Stations 
-$sql = "SELECT * FROM `oregon911_cad`.`pdx911_stations` WHERE county != 'M' ORDER BY ID";
-$result = $db->sql_query($sql);
-while ($rows = $result->fetch_assoc()) {
-    if ($rows['ABBV'] != "UNK") {
-        $station = $rows['ABBV'];
-    } else {
-        $station = $rows['STATION'];
-    }
-    if ($CallIDM == 1) {
-        echo ("$CallIDM: { info:'" . "Fire Station: " . $station . " City: " . $rows['CITY'] . " Agency: " . $rows['DISTRICT'] . " Address: " . $rows['ADDRESS'] . "', lat:" . $rows['LAT'] . ", lng:" . $rows['LON'] . ", icon:'../images/MISC/firedept.png' }");
-    } else {
-        echo (",$CallIDM: { info:'" . "Fire Station: " . $rows['ABBV'] . " City: " . $rows['CITY'] . " Agency: " . $rows['DISTRICT'] . " Address: " . $rows['ADDRESS'] . "', lat:" . $rows['LAT'] . ", lng:" . $rows['LON'] . ", icon:'../images/MISC/firedept.png' }");
-    }
-    $CallIDM++;
-}
-
-// Hospitals 
-$sql = "SELECT * FROM `oregon911_cad`.`pdx911_hospitals` ORDER BY ID";
-$result = $db->sql_query($sql);
-while ($rows = $result->fetch_assoc()) {
-    echo (",$CallIDM: { info:'" . "Hospital: " . str_replace("'", "\'", $rows['NAME']) . " City: " . str_replace("'", "\'", $rows['CITY']) . " Address: " . str_replace("'", "\'", $rows['ADDRESS']) . "', lat:" . $rows['LAT'] . ", lng:" . $rows['LON'] . ", icon:'../images/MISC/hospital.png' }");
-    $CallIDM++;
-}
-
-// Airports 
-$sql = "SELECT * FROM `oregon911_cad`.`pdx911_airports` ORDER BY ID";
-$result = $db->sql_query($sql);
-while ($rows = $result->fetch_assoc()) {
-    echo (",$CallIDM: { info:'" . "Airport: " . str_replace("'", "\'", $rows['NAME']) . " Address: " . str_replace("'", "\'", $rows['ADDRESS']) . "', lat:" . $rows['LAT'] . ", lng:" . $rows['LON'] . ", icon:'../images/MISC/airport.png' }");
-    $CallIDM++;
-}
-
-// Lifeflight 
-$sql = "SELECT * FROM `oregon911_cad`.`pdx911_lifeflight` ORDER BY ID";
-$result = $db->sql_query($sql);
-while ($rows = $result->fetch_assoc()) {
-    echo (",$CallIDM: { info:'" . "Name: " . $rows['NAME'] . " Type: " . $rows['UTYPE'] . " Address: " . $rows['ADDRESS'] . "', lng:" . $rows['LON'] . ", icon:'../images/MISC/lifeflight.png' }");
-    $CallIDM++;
-}
-
-$sql = "SELECT * FROM `oregon911_cad`.`pdx911_calls` WHERE county != 'M' AND lon != '0' AND lat !='0'";
-$result = $db->sql_query($sql);
-while ($rows = $result->fetch_assoc()) {
-    echo(',' . $CallIDM . ': { info:\'<div class="incident">' .
-    '<h1> Call: ' . $rows['callSum'] . ' </h1>' .
-    '<h3> Address: ' . $rows['address'] . ' </h3>' .
-    '<p>Station: ' . $rows['station'] . '</p>' .
-    '<p> Time: ' . $rows['timestamp'] . ' </p>');
-    echo('<a href="./units?call=' . $rows['GUID'] . '&county=' . $rows['county'] . '" target="_blank">More Info</a></div>\'' .
-    ', lat:' . $rows['lat'] . ', lng:' . $rows['lon'] . ', icon:\'' . $rows['icon'] . '\' }');
-    $CallIDM++;
-}
-?>
-            };
-
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 10,
-                streetViewControl: true,
-                center: new google.maps.LatLng(45.432913, -122.636261),
-                mapTypeId: google.maps.MapTypeId.ROADMAP
+        <script type="text/javascript">
+            var myCalls = [];
+// create a map in the "map" div, set the view to a given place and zoom
+// initialize the map on the "map" div with a given center and zoom
+            var map = L.map('map', {
+                center: [45.432913, -122.636261],
+                zoom: 11
             });
 
+// add an OpenStreetMap tile layer
+            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; Brandan Lasley 2015 &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+// deletes all markers on map;
+            function clearMap() {
+                for (var i = 0; i < myCalls.length; i++) {
+                    if (!(myCalls[i].id.indexOf("stadic") > -1)) {
+                        map.removeLayer(myCalls[i].call);
+                    }
+                }
+                return true;
+            }
+
+// display all markers id on map;
+            function displayAll() {
+                for (var i = 0; i < myCalls.length; i++) {
+                    alert(myCalls[i].id);
+                }
+                return true;
+            }
+
+// Search though all markers.
+            function searchMarkers(idx) {
+                for (var i = 0; i < myCalls.length; i++) {
+                    if (myCalls[i].id === idx) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+// Add Marker to map and return the created marker.
+            function addMarker(idx, html, lat, lng, iconW, iconH, iconURL, labelname, label) {
+                if (!searchMarkers(idx)) {
+                    //console.log("Adding call: " + idx);
+                    var markerLocation = new L.LatLng(lat, lng);
+                    var Marker = L.Icon.Default.extend({
+                        options: {
+                            iconUrl: iconURL,
+                            iconSize: [iconW, iconH],
+                            labelAnchor: new L.Point(-40 - (labelname.length * 2), 35),
+                            zoomAnimation: false,
+                            clickable: true,
+                            shadowSize: [iconW, iconH]
+                        }
+                    });
+                    var marker = new Marker();
 <?PHP
-if (!$mobile) {
+if ($_GET['label'] != "n") {
     ?>
-                var adUnitDiv = document.createElement('div');
-                var adUnitOptions = {
-                    format: google.maps.adsense.AdFormat.VERTICAL_BANNER,
-                    position: google.maps.ControlPosition.RIGHT_BOTTOM,
-                    publisherId: 'ca-pub-4799522447106781',
-                    map: map,
-                    visible: true
-                };
-                var adUnit = new google.maps.adsense.AdUnit(adUnitDiv, adUnitOptions);
+                        if (label) {
+                            var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(map).showLabel();
+                        } else {
+                            var callMarker = L.marker(markerLocation, {icon: marker}).bindPopup(html).addTo(map);
+                        }
+    <?PHP
+} else {
+    ?>
+                        var callMarker = L.marker(markerLocation, {icon: marker}).bindPopup(html).addTo(map);
     <?PHP
 }
 ?>
 
-            var infowindow = new google.maps.InfoWindow();
+                    var callObj = {};
+                    callObj['id'] = idx;
+                    callObj['call'] = callMarker;
 
-            var auto_remove = true;
-
-            function setMarkers(locObj) {
-                if (auto_remove) {
-                    $.each(locations, function (key) {
-                        if (!locObj[key]) {
-                            if (locations[key].marker) {
-                                locations[key].marker.setMap(null);
-                            }
-                            delete locations[key];
-                        }
-                    });
+                    myCalls.push(callObj);
+                    return true;
                 }
-
-                $.each(locObj, function (key, loc) {
-                    if (!locations[key] && loc.lat !== undefined && loc.lng !== undefined) {
-
-                        loc.marker = new google.maps.Marker({
-                            icon: loc.icon,
-                            position: new google.maps.LatLng(loc.lat, loc.lng),
-                            map: map
-                        });
-
-                        google.maps.event.addListener(loc.marker, 'click', (function (key) {
-                            return function () {
-                                if (locations[key]) {
-                                    infowindow.setContent(locations[key].info);
-                                    infowindow.open(map, locations[key].marker);
-                                }
-                            }
-                        })(key));
-
-                        locations[key] = loc;
-                    }
-                    else if (locations[key] && loc.remove) {
-                        if (locations[key].marker) {
-                            locations[key].marker.setMap(null);
-                        }
-                        delete locations[key];
-                    }
-                    else if (locations[key]) {
-                        $.extend(locations[key], loc);
-                        if (loc.lat !== undefined && loc.lng !== undefined) {
-                            locations[key].marker.setPosition(
-                                    new google.maps.LatLng(loc.lat, loc.lng)
-                                    );
-                            locations[key].marker.setIcon(loc.icon);
-                        }
-                    }
-                });
+                return updateMarker(idx, html, lat, lng, iconW, iconH, iconURL, labelname, label);
             }
 
+// Updates Marker 
+            function updateMarker(idx, html, lat, lng, iconW, iconH, iconURL, labelname, label) {
+                if (!(idx.indexOf("stadic") > -1)) {
+                    var markerLocation = new L.LatLng(lat, lng);
+                    for (var i = 0; i < myCalls.length; i++) {
+                        if (myCalls[i].id === idx) {
+                            //console.log("Updating call: " + myCalls[i].id);
+                            var markerLocation = new L.LatLng(lat, lng);
+                            var Marker = L.icon({
+                                iconUrl: iconURL,
+                                iconSize: [iconW, iconH],
+                                labelAnchor: new L.Point(-40 - (labelname.length * 2), 35),
+                                zoomAnimation: false,
+                                clickable: true,
+                                shadowSize: [iconW, iconH]
+                            });
+                            myCalls[i].call.unbindLabel();
+                            myCalls[i].call.setLatLng(markerLocation);
+                            myCalls[i].call.bindPopup(html);
+                            myCalls[i].call.setIcon(Marker);
+                            if (label) {
+<?PHP
+if ($_GET['label'] != "n") {
+    ?>
+                                    myCalls[i].call.bindLabel(labelname, {noHide: true}).showLabel();
+                                    ;
+    <?PHP
+}
+?>
+                            }
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+// remove marker from map and data structure. This doesn't work.
+            /* function removeMarker(idx) {
+             for (var i = 0; i < myCalls.length; i++) {
+             if (myCalls[i].id === idx) {
+             myCalls[i].call.unbindLabel();
+             map.removeLayer(myCalls[i].call);
+             if (idx > 0) {
+             myCalls.splice(idx, 1);
+             } else {
+             myCalls = [];
+             }
+             return true;
+             }
+             }
+             return false; // always returns false because its broken.
+             }*/
+
+            var firstrun = true;
+
+// JSON update
             var ajaxObj = {
                 options: {
                     url: "./map",
                     dataType: "json"
                 },
-                delay: 30000,
+                delay: 10000,
                 errorCount: 0,
-                errorThreshold: 10000,
+                errorThreshold: 15000,
                 ticker: null,
                 get: function () {
                     if (ajaxObj.errorCount < ajaxObj.errorThreshold) {
@@ -234,10 +230,47 @@ if (!$mobile) {
                         .always(ajaxObj.get);
             }
 
-            setMarkers(locs);
-            ajaxObj.get();
+            function setMarkers(locObj) {
+                var tmpMyCalls = [];
+                $.each(locObj, function (key, loc) {
+                    tmpMyCalls.push(key);
+                    addMarker(key, loc.info, loc.lat, loc.lng, loc.iconW, loc.iconH, loc.icon, loc.labelname, loc.label);
+                });
+                cleanMarkers(tmpMyCalls);
+            }
 
+// Remove markers no longer existing. 
+            function cleanMarkers(tmpMyCalls) {
+                for (var i = 0; i < myCalls.length; i++) {
+                    if (tmpMyCalls.length > 0) {
+                        var found = false;
+                        for (var id = 0; id < tmpMyCalls.length; id++) {
+                            if (myCalls[i].id === tmpMyCalls[id]) {
+                                found = true;
+                            }
+                        }
+                        if (found === false) {
+                            //console.log("Removing call: " + myCalls[i].id);
+                            myCalls[i].call.unbindLabel();
+                            map.removeLayer(myCalls[i].call);
+                            myCalls.splice(i, 1);
+                        }
+                    } else {
+                        //console.log("================= REMOVING ALL CALLS! =================" + myCalls[i].id);
+                        clearMap();
+                        myCalls = [];
+                    }
+                }
+            }
+
+            // Run
+            if (firstrun) {
+                getMarkerData();
+                firstrun = false;
+            }
+            ajaxObj.get();
         </script>
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
         <?PHP echo($analytics); ?>
     </body>
 </html>
