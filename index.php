@@ -50,7 +50,7 @@ require_once("google.php");
 
 
 
-                <div id='map' style="height:100vh; width: 100%; overflow:hidden;"></div>
+                <div id='map' style="height:96vh; width: 100%; overflow:hidden;"></div>
 
 
 
@@ -109,11 +109,25 @@ require_once("google.php");
                 if (!searchMarkers(idx)) {
                     //console.log("Adding call: " + idx);
                     var markerLocation = new L.LatLng(lat, lng);
-                    var Marker = L.Icon.Default.extend({
+                    var offset = 0;
+
+                    if (labelname.length <= 3) {
+                        offset = -(40 - labelname.length / 2);
+                    } else if ((labelname.length > 5) && (labelname.length < 10)) {
+                        offset = -(55 - labelname.length / 2);
+                    } else if ((labelname.length > 10) && (labelname.length < 16)) {
+                        offset = -(77 - labelname.length / 2);
+                    } else if ((labelname.length > 16) && (labelname.length < 21)) {
+                        offset = -(82 - labelname.length / 2);
+                    } else {
+                        offset = -(85 - labelname.length / 2);
+                    }
+
+                    var Marker = L.Icon.extend({
                         options: {
                             iconUrl: iconURL,
                             iconSize: [iconW, iconH],
-                            labelAnchor: new L.Point(-40 - (labelname.length * 2), 35),
+                            labelAnchor: new L.Point(offset, 35),
                             zoomAnimation: false,
                             clickable: true,
                             shadowSize: [iconW, iconH]
@@ -154,10 +168,23 @@ if ($_GET['label'] != "n") {
                         if (myCalls[i].id === idx) {
                             //console.log("Updating call: " + myCalls[i].id);
                             var markerLocation = new L.LatLng(lat, lng);
+                            var offset = 0;
+
+                            if (labelname.length <= 3) {
+                                offset = -(40 - labelname.length / 2);
+                            } else if ((labelname.length > 5) && (labelname.length < 10)) {
+                                offset = -(55 - labelname.length / 2);
+                            } else if ((labelname.length > 10) && (labelname.length < 16)) {
+                                offset = -(77 - labelname.length / 2);
+                            } else if ((labelname.length > 16) && (labelname.length < 21)) {
+                                offset = -(82 - labelname.length / 2);
+                            } else {
+                                offset = -(85 - labelname.length / 2);
+                            }
                             var Marker = L.icon({
                                 iconUrl: iconURL,
                                 iconSize: [iconW, iconH],
-                                labelAnchor: new L.Point(-40 - (labelname.length * 2), 35),
+                                labelAnchor: new L.Point(offset, 35),
                                 zoomAnimation: false,
                                 clickable: true,
                                 shadowSize: [iconW, iconH]
