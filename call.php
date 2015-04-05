@@ -815,17 +815,67 @@ if ($found) {
         <script type="text/javascript" src="./js/leaflet.label.js"></script>
         <script async type='text/javascript'>
             var myCalls = [];
-// create a map in the "map" div, set the view to a given place and zoom
-// initialize the map on the "map" div with a given center and zoom
+            // create a map in the "map" div, set the view to a given place and zoom
+            // initialize the map on the "map" div with a given center and zoom
             var map = L.map('map', {
                 center: [<?PHP echo ($lat); ?>, <?PHP echo ($long); ?>],
                 zoom: 16
             });
 
-// add an OpenStreetMap tile layer
-            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            // add an OpenStreetMap tile layer
+            var OSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; Brandan Lasley 2015 &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
+
+
+            // https: also suppported.
+            var HERE_hybridDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/hybrid.day/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+                attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+                subdomains: '1234',
+                mapID: 'newest',
+                app_id: 'Y8m9dK2brESDPGJPdrvs',
+                app_code: 'dq2MYIvjAotR8tHvY8Q_Dg',
+                base: 'aerial',
+                minZoom: 0,
+                maxZoom: 20
+            });
+
+            // https: also suppported.
+            var HERE_normalNight = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/normal.night/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+                attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+                subdomains: '1234',
+                mapID: 'newest',
+                app_id: 'Y8m9dK2brESDPGJPdrvs',
+                app_code: 'dq2MYIvjAotR8tHvY8Q_Dg',
+                base: 'base',
+                minZoom: 0,
+                maxZoom: 20
+            });
+
+            // https: also suppported.
+            var HERE_terrainDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/terrain.day/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+                attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+                subdomains: '1234',
+                mapID: 'newest',
+                app_id: 'Y8m9dK2brESDPGJPdrvs',
+                app_code: 'dq2MYIvjAotR8tHvY8Q_Dg',
+                base: 'aerial',
+                minZoom: 0,
+                maxZoom: 20
+            });
+
+            var baseLayers = {
+                "Standard": OSM,
+                "Night Map": HERE_normalNight,
+                "Satellite": HERE_hybridDay,
+                "Terrain": HERE_terrainDay
+            };
+
+            var overlays = {
+            };
+
+            L.control.layers(baseLayers, overlays).addTo(map);
+
 <?PHP
 echo ('addMarker(1,"' . $type . ' ' . $station . ' ' . $GUID . ' ' . str_replace("'", "\'", $callSum) . ' | ' . $address . '  | ' . $units . '", ' . $lat . ', ' . $long . ', 32, 37, "' . $icon . '","' . $callSum . '",true);');
 ?>
@@ -868,21 +918,9 @@ echo ('addMarker(1,"' . $type . ' ' . $station . ' ' . $GUID . ' ' . str_replace
                         }
                     });
                     var marker = new Marker();
-<?PHP
-if ($_GET['label'] == "y") {
-    ?>
-                        if (label) {
-                            var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).addTo(map).showLabel();
-                        } else {
-                            var callMarker = L.marker(markerLocation, {icon: marker}).addTo(map);
-                        }
-    <?PHP
-} else {
-    ?>
-                        var callMarker = L.marker(markerLocation, {icon: marker}).addTo(map);
-    <?PHP
-}
-?>
+
+                    var callMarker = L.marker(markerLocation, {icon: marker}).addTo(map);
+
 
                     var callObj = {};
                     callObj['id'] = idx;

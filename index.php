@@ -69,29 +69,69 @@ require_once("google.php");
             var police = new L.LayerGroup();
             var accidents = new L.LayerGroup();
             var TrfAccid = ["TRF ACC, UNK INJ", "BLOCKING", "NOT BLOCKING", "TRF ACC, INJURY", "MVA-INJURY ACCID", "TRF ACC, NON-INJ", "TAI-TRAPPED VICT", "TAI-HIGH MECHANI", "TAI-PT NOT ALERT", "MVA-UNK INJURY"];
-            
+
 // create a map in the "map" div, set the view to a given place and zoom
 // initialize the map on the "map" div with a given center and zoom
-                    var map = L.map('map', {
-                        center: [45.432913, -122.636261],
-                        zoom: 11,
-                        layers: [fire, EMS, police, accidents]
-                    });
+            var map = L.map('map', {
+                center: [45.432913, -122.636261],
+                zoom: 11,
+                layers: [fire, EMS, police, accidents]
+            });
 
-// add an OpenStreetMap tile layer
-            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            // add an OpenStreetMap tile layer
+            var OSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; Brandan Lasley 2015 &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            var baseLayers = {
-            };
 
+            // https: also suppported.
+            var HERE_hybridDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/hybrid.day/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+                attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+                subdomains: '1234',
+                mapID: 'newest',
+                app_id: 'Y8m9dK2brESDPGJPdrvs',
+                app_code: 'dq2MYIvjAotR8tHvY8Q_Dg',
+                base: 'aerial',
+                minZoom: 0,
+                maxZoom: 20
+            });
+
+            // https: also suppported.
+            var HERE_normalNight = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/normal.night/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+                attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+                subdomains: '1234',
+                mapID: 'newest',
+                app_id: 'Y8m9dK2brESDPGJPdrvs',
+                app_code: 'dq2MYIvjAotR8tHvY8Q_Dg',
+                base: 'base',
+                minZoom: 0,
+                maxZoom: 20
+            });
+
+            // https: also suppported.
+            var HERE_terrainDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/terrain.day/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+                attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+                subdomains: '1234',
+                mapID: 'newest',
+                app_id: 'Y8m9dK2brESDPGJPdrvs',
+                app_code: 'dq2MYIvjAotR8tHvY8Q_Dg',
+                base: 'aerial',
+                minZoom: 0,
+                maxZoom: 20
+            });
+
+            var baseLayers = {
+                "Standard": OSM,
+                "Night Map": HERE_normalNight,
+                "Satellite": HERE_hybridDay,
+                "Terrain": HERE_terrainDay
+            };
 
             var overlays = {
                 "Fire": fire,
                 "EMS": EMS,
                 "Police": police,
-                "Accidents": accidents,
+                "Accidents": accidents
             };
 
             L.control.layers(baseLayers, overlays).addTo(map);
@@ -100,7 +140,18 @@ require_once("google.php");
             function clearMap() {
                 for (var i = 0; i < myCalls.length; i++) {
                     if (!(myCalls[i].id.indexOf("stadic") > -1)) {
-                        map.removeLayer(myCalls[i].call);
+                        myCalls[i].call.unbindLabel();
+                        if (myCalls[i].layer === "fire") {
+                            fire.removeLayer(myCalls[i].call);
+                        } else if (myCalls[i].layer === "EMS") {
+                            EMS.removeLayer(myCalls[i].call);
+                        } else if (myCalls[i].layer === "police") {
+                            police.removeLayer(myCalls[i].call);
+                        } else if (myCalls[i].layer === "accidents") {
+                            accidents.removeLayer(myCalls[i].call);
+                        } else {
+                            map.removeLayer(myCalls[i].call);
+                        }
                     }
                 }
                 return true;
@@ -156,24 +207,29 @@ require_once("google.php");
                         }
                     });
                     var marker = new Marker();
-                    
+
                     var isAccident = false;
                     for (var i = TrfAccid.length; i--; ) {
                         if (TrfAccid[i] === labelname) {
                             isAccident = true;
                         }
                     }
-                    
+
                     if (isAccident) {
-                          var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(accidents).showLabel();
+                        var layer = "accidents";
+                        var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(accidents).showLabel();
                     } else {
-                        if (type == "F") {
+                        if (type === "F") {
+                            var layer = "fire";
                             var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(fire).showLabel();
-                        } else if (type == "M") {
+                        } else if (type === "M") {
+                            var layer = "EMS";
                             var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(EMS).showLabel();
-                        } else if (type == "P") {
+                        } else if (type === "P") {
+                            var layer = "police";
                             var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(police).showLabel();
                         } else {
+                            var layer = "other";
                             if (label) {
                                 var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(map).showLabel();
                             } else {
@@ -185,6 +241,7 @@ require_once("google.php");
                     var callObj = {};
                     callObj['id'] = idx;
                     callObj['call'] = callMarker;
+                    callObj['layer'] = layer;
 
                     myCalls.push(callObj);
                     return true;
@@ -201,6 +258,33 @@ require_once("google.php");
                             //console.log("Updating call: " + myCalls[i].id);
                             var markerLocation = new L.LatLng(lat, lng);
                             var offset = 0;
+
+                            if (!type === myCalls[i].layer) {
+                                cleanLayer(myCalls[i]);
+                                if (isAccident) {
+                                    var layer = "accidents";
+                                    myCalls[i].addTo(accidents).showLabel();
+                                } else {
+                                    if (type === "F") {
+                                        var layer = "fire";
+                                        myCalls[i].addTo(fire).showLabel();
+                                    } else if (type === "M") {
+                                        var layer = "EMS";
+                                        myCalls[i].addTo(EMS).showLabel();
+                                    } else if (type === "P") {
+                                        var layer = "police";
+                                        myCalls[i].addTo(police).showLabel();
+                                    } else {
+                                        var layer = "other";
+                                        if (label) {
+                                            myCalls[i].addTo(map).showLabel();
+                                        } else {
+                                            myCalls[i].addTo(map);
+                                        }
+                                    }
+                                }
+                                myCalls[i].layer = layer;
+                            }
 
                             if (labelname.length <= 5) {
                                 offset = -(40 - labelname.length / 2);
@@ -311,7 +395,8 @@ if ($_GET['label'] != "n") {
                         if (found === false) {
                             //console.log("Removing call: " + myCalls[i].id);
                             myCalls[i].call.unbindLabel();
-                            map.removeLayer(myCalls[i].call);
+
+                            cleanLayer(myCalls[i]);
                             myCalls.splice(i, 1);
                         }
                     } else {
@@ -319,6 +404,20 @@ if ($_GET['label'] != "n") {
                         clearMap();
                         myCalls = [];
                     }
+                }
+            }
+
+            function cleanLayer(myCall) {
+                if (myCall.layer === "fire") {
+                    fire.removeLayer(myCall.call);
+                } else if (myCall.layer === "EMS") {
+                    EMS.removeLayer(myCall.call);
+                } else if (myCall.layer === "police") {
+                    police.removeLayer(myCall.call);
+                } else if (myCall.layer === "accidents") {
+                    accidents.removeLayer(myCall.call);
+                } else {
+                    map.removeLayer(myCall.call);
                 }
             }
 
