@@ -64,17 +64,37 @@ require_once("google.php");
         </script>
         <script type="text/javascript">
             var myCalls = [];
+            var fire = new L.LayerGroup();
+            var EMS = new L.LayerGroup();
+            var police = new L.LayerGroup();
+            var accidents = new L.LayerGroup();
+            var TrfAccid = ["TRF ACC, UNK INJ", "BLOCKING", "NOT BLOCKING", "TRF ACC, INJURY", "MVA-INJURY ACCID", "TRF ACC, NON-INJ", "TAI-TRAPPED VICT", "TAI-HIGH MECHANI", "TAI-PT NOT ALERT", "MVA-UNK INJURY"];
+            
 // create a map in the "map" div, set the view to a given place and zoom
 // initialize the map on the "map" div with a given center and zoom
-            var map = L.map('map', {
-                center: [45.432913, -122.636261],
-                zoom: 11
-            });
+                    var map = L.map('map', {
+                        center: [45.432913, -122.636261],
+                        zoom: 11,
+                        layers: [fire, EMS, police, accidents]
+                    });
 
 // add an OpenStreetMap tile layer
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; Brandan Lasley 2015 &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
+
+            var baseLayers = {
+            };
+
+
+            var overlays = {
+                "Fire": fire,
+                "EMS": EMS,
+                "Police": police,
+                "Accidents": accidents,
+            };
+
+            L.control.layers(baseLayers, overlays).addTo(map);
 
 // deletes all markers on map;
             function clearMap() {
@@ -105,13 +125,15 @@ require_once("google.php");
             }
 
 // Add Marker to map and return the created marker.
-            function addMarker(idx, html, lat, lng, iconW, iconH, iconURL, labelname, label) {
+            function addMarker(idx, html, lat, lng, type, iconW, iconH, iconURL, labelname, label) {
                 if (!searchMarkers(idx)) {
                     //console.log("Adding call: " + idx);
                     var markerLocation = new L.LatLng(lat, lng);
                     var offset = 0;
+// This works, but is not perfect!                    
+// offset = -(((80 - labelname.length)) + (labelname.length / 2) );
 
-                    if (labelname.length <= 3) {
+                    if (labelname.length <= 5) {
                         offset = -(40 - labelname.length / 2);
                     } else if ((labelname.length > 5) && (labelname.length < 10)) {
                         offset = -(55 - labelname.length / 2);
@@ -134,21 +156,31 @@ require_once("google.php");
                         }
                     });
                     var marker = new Marker();
-<?PHP
-if ($_GET['label'] != "n") {
-    ?>
-                        if (label) {
-                            var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(map).showLabel();
-                        } else {
-                            var callMarker = L.marker(markerLocation, {icon: marker}).bindPopup(html).addTo(map);
+                    
+                    var isAccident = false;
+                    for (var i = TrfAccid.length; i--; ) {
+                        if (TrfAccid[i] === labelname) {
+                            isAccident = true;
                         }
-    <?PHP
-} else {
-    ?>
-                        var callMarker = L.marker(markerLocation, {icon: marker}).bindPopup(html).addTo(map);
-    <?PHP
-}
-?>
+                    }
+                    
+                    if (isAccident) {
+                          var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(accidents).showLabel();
+                    } else {
+                        if (type == "F") {
+                            var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(fire).showLabel();
+                        } else if (type == "M") {
+                            var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(EMS).showLabel();
+                        } else if (type == "P") {
+                            var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(police).showLabel();
+                        } else {
+                            if (label) {
+                                var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(map).showLabel();
+                            } else {
+                                var callMarker = L.marker(markerLocation, {icon: marker}).bindPopup(html).addTo(map);
+                            }
+                        }
+                    }
 
                     var callObj = {};
                     callObj['id'] = idx;
@@ -157,11 +189,11 @@ if ($_GET['label'] != "n") {
                     myCalls.push(callObj);
                     return true;
                 }
-                return updateMarker(idx, html, lat, lng, iconW, iconH, iconURL, labelname, label);
+                return updateMarker(idx, html, lat, lng, type, iconW, iconH, iconURL, labelname, label);
             }
 
 // Updates Marker 
-            function updateMarker(idx, html, lat, lng, iconW, iconH, iconURL, labelname, label) {
+            function updateMarker(idx, html, lat, lng, type, iconW, iconH, iconURL, labelname, label) {
                 if (!(idx.indexOf("stadic") > -1)) {
                     var markerLocation = new L.LatLng(lat, lng);
                     for (var i = 0; i < myCalls.length; i++) {
@@ -170,7 +202,7 @@ if ($_GET['label'] != "n") {
                             var markerLocation = new L.LatLng(lat, lng);
                             var offset = 0;
 
-                            if (labelname.length <= 3) {
+                            if (labelname.length <= 5) {
                                 offset = -(40 - labelname.length / 2);
                             } else if ((labelname.length > 5) && (labelname.length < 10)) {
                                 offset = -(55 - labelname.length / 2);
@@ -232,7 +264,7 @@ if ($_GET['label'] != "n") {
 // JSON update
             var ajaxObj = {
                 options: {
-                    url: "./map",
+                    url: "./map.php?cad=true",
                     dataType: "json"
                 },
                 delay: 10000,
@@ -261,7 +293,7 @@ if ($_GET['label'] != "n") {
                 var tmpMyCalls = [];
                 $.each(locObj, function (key, loc) {
                     tmpMyCalls.push(key);
-                    addMarker(key, loc.info, loc.lat, loc.lng, loc.iconW, loc.iconH, loc.icon, loc.labelname, loc.label);
+                    addMarker(key, loc.info, loc.lat, loc.lng, loc.type, loc.iconW, loc.iconH, loc.icon, loc.labelname, loc.label);
                 });
                 cleanMarkers(tmpMyCalls);
             }
