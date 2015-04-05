@@ -141,19 +141,10 @@ require_once("google.php");
                 for (var i = 0; i < myCalls.length; i++) {
                     if (!(myCalls[i].id.indexOf("stadic") > -1)) {
                         myCalls[i].call.unbindLabel();
-                        if (myCalls[i].layer === "fire") {
-                            fire.removeLayer(myCalls[i].call);
-                        } else if (myCalls[i].layer === "EMS") {
-                            EMS.removeLayer(myCalls[i].call);
-                        } else if (myCalls[i].layer === "police") {
-                            police.removeLayer(myCalls[i].call);
-                        } else if (myCalls[i].layer === "accidents") {
-                            accidents.removeLayer(myCalls[i].call);
-                        } else {
-                            map.removeLayer(myCalls[i].call);
-                        }
+                        cleanLayer(myCalls[i]);
                     }
                 }
+                myCalls = [];
                 return true;
             }
 
@@ -175,27 +166,77 @@ require_once("google.php");
                 return false;
             }
 
+// Positions the label correctly.. enough
+            function getLabelOffset(labelname) {
+                var offset = 0;
+                if (labelname.length <= 5) {
+                    offset = -(40 - labelname.length / 2);
+                } else if ((labelname.length > 5) && (labelname.length < 10)) {
+                    offset = -(55 - labelname.length / 2);
+                } else if ((labelname.length > 10) && (labelname.length < 16)) {
+                    offset = -(77 - labelname.length / 2);
+                } else if ((labelname.length > 16) && (labelname.length < 21)) {
+                    offset = -(82 - labelname.length / 2);
+                } else {
+                    offset = -(85 - labelname.length / 2);
+                }
+                return offset;
+            }
+
+// Changes call to another layer group.
+            function changeLayer(myCall, isMVA) {
+                if (isMVA) {
+                    var layer = "accidents";
+                    myCalls[i].addTo(accidents);
+                } else {
+                    if (type === "F") {
+                        var layer = "fire";
+                        myCalls[i].addTo(fire);
+                    } else if (type === "M") {
+                        var layer = "EMS";
+                        myCalls[i].addTo(EMS);
+                    } else if (type === "P") {
+                        var layer = "police";
+                        myCalls[i].addTo(police);
+                    } else {
+                        var layer = "other";
+                        myCalls[i].addTo(map);
+                    }
+                }
+                return layer;
+            }
+
+// Is this an accident or a normal call?
+            function isAccident(labelname) {
+                for (var i = TrfAccid.length; i--; ) {
+                    if (TrfAccid[i] === labelname) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+// Remove call from current layer.
+            function cleanLayer(myCall) {
+                if (myCall.layer === "fire") {
+                    fire.removeLayer(myCall.call);
+                } else if (myCall.layer === "EMS") {
+                    EMS.removeLayer(myCall.call);
+                } else if (myCall.layer === "police") {
+                    police.removeLayer(myCall.call);
+                } else if (myCall.layer === "accidents") {
+                    accidents.removeLayer(myCall.call);
+                } else {
+                    map.removeLayer(myCall.call);
+                }
+            }
+
 // Add Marker to map and return the created marker.
             function addMarker(idx, html, lat, lng, type, iconW, iconH, iconURL, labelname, label) {
                 if (!searchMarkers(idx)) {
                     //console.log("Adding call: " + idx);
                     var markerLocation = new L.LatLng(lat, lng);
-                    var offset = 0;
-// This works, but is not perfect!                    
-// offset = -(((80 - labelname.length)) + (labelname.length / 2) );
-
-                    if (labelname.length <= 5) {
-                        offset = -(40 - labelname.length / 2);
-                    } else if ((labelname.length > 5) && (labelname.length < 10)) {
-                        offset = -(55 - labelname.length / 2);
-                    } else if ((labelname.length > 10) && (labelname.length < 16)) {
-                        offset = -(77 - labelname.length / 2);
-                    } else if ((labelname.length > 16) && (labelname.length < 21)) {
-                        offset = -(82 - labelname.length / 2);
-                    } else {
-                        offset = -(85 - labelname.length / 2);
-                    }
-
+                    var offset = getLabelOffset(labelname);
                     var Marker = L.Icon.extend({
                         options: {
                             iconUrl: iconURL,
@@ -208,14 +249,7 @@ require_once("google.php");
                     });
                     var marker = new Marker();
 
-                    var isAccident = false;
-                    for (var i = TrfAccid.length; i--; ) {
-                        if (TrfAccid[i] === labelname) {
-                            isAccident = true;
-                        }
-                    }
-
-                    if (isAccident) {
+                    if (isAccident(labelname)) {
                         var layer = "accidents";
                         var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(accidents).showLabel();
                     } else {
@@ -261,42 +295,10 @@ require_once("google.php");
 
                             if (!type === myCalls[i].layer) {
                                 cleanLayer(myCalls[i]);
-                                if (isAccident) {
-                                    var layer = "accidents";
-                                    myCalls[i].addTo(accidents).showLabel();
-                                } else {
-                                    if (type === "F") {
-                                        var layer = "fire";
-                                        myCalls[i].addTo(fire).showLabel();
-                                    } else if (type === "M") {
-                                        var layer = "EMS";
-                                        myCalls[i].addTo(EMS).showLabel();
-                                    } else if (type === "P") {
-                                        var layer = "police";
-                                        myCalls[i].addTo(police).showLabel();
-                                    } else {
-                                        var layer = "other";
-                                        if (label) {
-                                            myCalls[i].addTo(map).showLabel();
-                                        } else {
-                                            myCalls[i].addTo(map);
-                                        }
-                                    }
-                                }
-                                myCalls[i].layer = layer;
+                                myCalls[i].layer = changeLayer(myCalls[i], isAccident(labelname));
                             }
 
-                            if (labelname.length <= 5) {
-                                offset = -(40 - labelname.length / 2);
-                            } else if ((labelname.length > 5) && (labelname.length < 10)) {
-                                offset = -(55 - labelname.length / 2);
-                            } else if ((labelname.length > 10) && (labelname.length < 16)) {
-                                offset = -(77 - labelname.length / 2);
-                            } else if ((labelname.length > 16) && (labelname.length < 21)) {
-                                offset = -(82 - labelname.length / 2);
-                            } else {
-                                offset = -(85 - labelname.length / 2);
-                            }
+                            var offset = getLabelOffset(labelname);
                             var Marker = L.icon({
                                 iconUrl: iconURL,
                                 iconSize: [iconW, iconH],
@@ -327,21 +329,17 @@ if ($_GET['label'] != "n") {
             }
 
 // remove marker from map and data structure. This doesn't work.
-            /* function removeMarker(idx) {
-             for (var i = 0; i < myCalls.length; i++) {
-             if (myCalls[i].id === idx) {
-             myCalls[i].call.unbindLabel();
-             map.removeLayer(myCalls[i].call);
-             if (idx > 0) {
-             myCalls.splice(idx, 1);
-             } else {
-             myCalls = [];
-             }
-             return true;
-             }
-             }
-             return false; // always returns false because its broken.
-             }*/
+            function removeMarker(idx) {
+                for (var i = 0; i < myCalls.length; i++) {
+                    if (myCalls[i].id === idx) {
+                        myCalls[i].call.unbindLabel();
+                        cleanLayer(myCalls[i]);
+                        myCalls.splice(idx, 1);
+                        return true;
+                    }
+                }
+                return false; // always returns false because its broken.
+            }
 
             var firstrun = true;
 
@@ -393,31 +391,12 @@ if ($_GET['label'] != "n") {
                             }
                         }
                         if (found === false) {
-                            //console.log("Removing call: " + myCalls[i].id);
-                            myCalls[i].call.unbindLabel();
-
-                            cleanLayer(myCalls[i]);
-                            myCalls.splice(i, 1);
+                            removeMarker(tmpMyCalls.id);
                         }
                     } else {
                         //console.log("================= REMOVING ALL CALLS! =================" + myCalls[i].id);
                         clearMap();
-                        myCalls = [];
                     }
-                }
-            }
-
-            function cleanLayer(myCall) {
-                if (myCall.layer === "fire") {
-                    fire.removeLayer(myCall.call);
-                } else if (myCall.layer === "EMS") {
-                    EMS.removeLayer(myCall.call);
-                } else if (myCall.layer === "police") {
-                    police.removeLayer(myCall.call);
-                } else if (myCall.layer === "accidents") {
-                    accidents.removeLayer(myCall.call);
-                } else {
-                    map.removeLayer(myCall.call);
                 }
             }
 
