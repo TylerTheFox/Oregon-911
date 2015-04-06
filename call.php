@@ -111,7 +111,7 @@ if ((!empty($_GET['call'])) && (!empty($_GET['county']))) {
     $active = false;
 
 // Create the SQL statement
-    $sql = "SELECT callSum, U.address, type, U.station, units, (Select DISTRICT From `oregon911_cad`.`pdx911_stations` AS S WHERE U.STATION = S.ABBV and U.county = S.county) as agency, U.lat, U.lon, icon, timestamp, 1 AS CACT FROM `oregon911_cad`.`pdx911_calls` AS U WHERE U.GUID = '" . $GUID . "' AND U.county = '" . $county . "' AND U.county != 'M' AND U.type LIKE '" . $initial_type . "'  UNION ALL SELECT callSum, U.address, type, U.station, units, (Select DISTRICT From `oregon911_cad`.`pdx911_stations` AS S WHERE U.STATION = S.ABBV and U.county = S.county AND S.county != 'M') as agency, U.lat, U.lon, icon, timestamp, 0 AS CACT FROM `oregon911_cad`.`pdx911_archive` AS U WHERE U.county != 'M' AND U.GUID = '" . $GUID . "' AND U.county = '" . $county . "'  AND U.type LIKE '" . $initial_type . "' ";
+    $sql = "SELECT callSum, U.address, type, U.agency as raw_agency, U.station, units, (Select DISTRICT From `oregon911_cad`.`pdx911_stations` AS S WHERE U.STATION = S.ABBV and U.county = S.county) as agency, U.lat, U.lon, icon, timestamp, 1 AS CACT FROM `oregon911_cad`.`pdx911_calls` AS U WHERE U.GUID = '" . $GUID . "' AND U.county = '" . $county . "' AND U.county != 'M' AND U.type LIKE '" . $initial_type . "'  UNION ALL SELECT callSum, U.address, type, U.agency as raw_agency, U.station, units, (Select DISTRICT From `oregon911_cad`.`pdx911_stations` AS S WHERE U.STATION = S.ABBV and U.county = S.county AND S.county != 'M') as agency, U.lat, U.lon, icon, timestamp, 0 AS CACT FROM `oregon911_cad`.`pdx911_archive` AS U WHERE U.county != 'M' AND U.GUID = '" . $GUID . "' AND U.county = '" . $county . "'  AND U.type LIKE '" . $initial_type . "' ";
 
 // Run the query 
     $result = $db->sql_query($sql);
@@ -123,6 +123,7 @@ if ((!empty($_GET['call'])) && (!empty($_GET['county']))) {
     $station = $row['station'];
     $units = $row['units'];
     $agency = $row['agency'];
+    $agencyRaw = $row['raw_agency'];
     $lat = $row['lat'];
     $long = $row['lon'];
     $icon = $row['icon'];
@@ -207,12 +208,17 @@ if ($found) {
             <tr>
                 <th scope="row">Agency</th>
                 <td><?php
-                    if (!empty($agency)) {
-                        echo ("<a href=\"./agency?agency=" . rawurlencode($agency) . "&county=" . $county . "\">" . $agency . "</a>");
+                    if ($type == "P") {
+                        echo ("<a href=\"./agency?agency=" . rawurlencode($agencyRaw) . "&county=" . $county . "\">" . $agencyRaw . "</a>");
                     } else {
-                        echo ("Unknown");
+                        if (!empty($agency)) {
+                            echo ("<a href=\"./agency?agency=" . rawurlencode($agency) . "&county=" . $county . "\">" . $agency . "</a>");
+                        } else {
+                            echo ("Unknown");
+                        }
                     }
-                    ?></td>
+                    ?>
+                </td>
             </tr>
             <th scope="row">Station</th>
             <td><?php
@@ -824,44 +830,46 @@ if ($found) {
 
             // add an OpenStreetMap tile layer
             var OSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; Brandan Lasley 2015 &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                attribution: '&copy; Brandan Lasley 2015 Map &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+                minZoom: 0,
+                maxZoom: 19
             }).addTo(map);
 
 
             // https: also suppported.
             var HERE_hybridDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/hybrid.day/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
-                attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+                attribution: '&copy; Brandan Lasley 2015 Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
                 subdomains: '1234',
                 mapID: 'newest',
                 app_id: 'Y8m9dK2brESDPGJPdrvs',
                 app_code: 'dq2MYIvjAotR8tHvY8Q_Dg',
                 base: 'aerial',
                 minZoom: 0,
-                maxZoom: 20
+                maxZoom: 19
             });
 
             // https: also suppported.
             var HERE_normalNight = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/normal.night/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
-                attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+                attribution: '&copy; Brandan Lasley 2015 Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
                 subdomains: '1234',
                 mapID: 'newest',
                 app_id: 'Y8m9dK2brESDPGJPdrvs',
                 app_code: 'dq2MYIvjAotR8tHvY8Q_Dg',
                 base: 'base',
                 minZoom: 0,
-                maxZoom: 20
+                maxZoom: 19
             });
 
             // https: also suppported.
             var HERE_terrainDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/terrain.day/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
-                attribution: 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+                attribution: '&copy; Brandan Lasley 2015 Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
                 subdomains: '1234',
                 mapID: 'newest',
                 app_id: 'Y8m9dK2brESDPGJPdrvs',
                 app_code: 'dq2MYIvjAotR8tHvY8Q_Dg',
                 base: 'aerial',
                 minZoom: 0,
-                maxZoom: 20
+                maxZoom: 19
             });
 
             var baseLayers = {
