@@ -1,13 +1,15 @@
 <?PHP
+
 $useragent = $_SERVER['HTTP_USER_AGENT'];
 
 $ad_728_90 = '
 <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- Oregon 911 Units -->
+<!-- OR911 Banner New -->
 <ins class="adsbygoogle"
-     style="display:inline-block;width:728px;height:90px"
+     style="display:block"
      data-ad-client="ca-pub-4799522447106781"
-     data-ad-slot="9004817374"></ins>
+     data-ad-slot="6267544171"
+     data-ad-format="auto"></ins>
 <script>
 (adsbygoogle = window.adsbygoogle || []).push({});
 </script>
@@ -15,11 +17,12 @@ $ad_728_90 = '
 
 $ad_336_280 = '
 <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- Oregon 911 Units -->
+<!-- OR911 Banner New -->
 <ins class="adsbygoogle"
-     style="display:inline-block;width:728px;height:90px"
+     style="display:block"
      data-ad-client="ca-pub-4799522447106781"
-     data-ad-slot="9004817374"></ins>
+     data-ad-slot="6267544171"
+     data-ad-format="auto"></ins>
 <script>
 (adsbygoogle = window.adsbygoogle || []).push({});
 </script>
@@ -27,11 +30,12 @@ $ad_336_280 = '
 
 $ad_320_100 = '
 <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- OR911 Mobile -->
+<!-- OR911 Banner New -->
 <ins class="adsbygoogle"
-     style="display:inline-block;width:320px;height:100px"
+     style="display:block"
      data-ad-client="ca-pub-4799522447106781"
-     data-ad-slot="4319285374"></ins>
+     data-ad-slot="6267544171"
+     data-ad-format="auto"></ins>
 <script>
 (adsbygoogle = window.adsbygoogle || []).push({});
 </script>
@@ -39,13 +43,21 @@ $ad_320_100 = '
 
 $analytics = "
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-52156481-2']);
+  _gaq.push(['_trackPageview']);
 
-  ga('create', 'UA-52156481-2', 'auto');
-  ga('send', 'pageview');
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+    function ga_heartbeat(){
+      _gaq.push(['_trackEvent', 'Heartbeat', 'Heartbeat', '', , true]);
+      setTimeout(ga_heartbeat, 5*60*1000);
+    }
+    ga_heartbeat();
 
 </script>
 ";

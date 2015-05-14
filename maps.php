@@ -86,7 +86,7 @@ require_once("google.php");
         '<h3> Address: ' . $rows['address'] . ' </h3>' .
         '<p>Station: ' . $rows['station'] . '</p>' .
         '<p> Time: ' . $rows['timestamp'] . ' </p>');
-        echo('<a href="http://cad.oregon911.net/units?call=' . $rows['GUID'] . '&county=' . $rows['county'] . '" target="_blank">More Info</a></div>\'' .
+        echo('<a href="http://cad.oregon911.net/units?call=' . $rows['GUID'] . '&county=' . $rows['county'] . '&type=' . $rows['type']  . '" target="_blank">More Info</a></div>\'' .
         ', lat:' . $rows['lat'] . ', lng:' . $rows['lon'] . ', icon:\'' . $rows['icon'] . '\' }');
         $CallIDM++;
     }

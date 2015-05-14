@@ -552,3 +552,8 @@ FileETag None
 # <IfModule mod_headers.c>
 #    Header set Connection Keep-Alive
 # </IfModule>
+
+RewriteEngine On
+RewriteRule ^incident/([^/]*)/police/([^/]*)$ /call?county=$1&type=P&call=$2 [L]
+RewriteRule ^incident/([^/]*)/fire/([^/]*)$ /call?county=$1&type=F&call=$2 [L]
+RewriteRule ^incident/([^/]*)/medical/([^/]*)$ /call?county=$1&type=M&call=$2 [L] 

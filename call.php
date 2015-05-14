@@ -95,7 +95,6 @@ if ((!empty($_GET['call'])) && (!empty($_GET['county']))) {
     $initial_type = $db->sql_escape(htmlspecialchars(strip_tags($_GET['type'])));
 
     if (strtoupper($initial_type) == 'P') {
-
         $initial_type = 'P';
     } else if (strtoupper($initial_type) == 'M') {
 
@@ -103,12 +102,12 @@ if ((!empty($_GET['call'])) && (!empty($_GET['county']))) {
     } else if (strtoupper($initial_type) == 'F') {
         $initial_type = 'F';
     } else {
-
-        $initial_type = '%';
+        $initial_type = 'F';
     }
 
     $found = false;
     $active = false;
+
 
 // Create the SQL statement
     $sql = "SELECT callSum, U.address, type, U.agency as raw_agency, U.station, units, (Select DISTRICT From `oregon911_cad`.`pdx911_stations` AS S WHERE U.STATION = S.ABBV and U.county = S.county) as agency, U.lat, U.lon, icon, timestamp, 1 AS CACT FROM `oregon911_cad`.`pdx911_calls` AS U WHERE U.GUID = '" . $GUID . "' AND U.county = '" . $county . "' AND U.county != 'M' AND U.type LIKE '" . $initial_type . "'  UNION ALL SELECT callSum, U.address, type, U.agency as raw_agency, U.station, units, (Select DISTRICT From `oregon911_cad`.`pdx911_stations` AS S WHERE U.STATION = S.ABBV and U.county = S.county AND S.county != 'M') as agency, U.lat, U.lon, icon, timestamp, 0 AS CACT FROM `oregon911_cad`.`pdx911_archive` AS U WHERE U.county != 'M' AND U.GUID = '" . $GUID . "' AND U.county = '" . $county . "'  AND U.type LIKE '" . $initial_type . "' ";
@@ -116,6 +115,17 @@ if ((!empty($_GET['call'])) && (!empty($_GET['county']))) {
 // Run the query 
     $result = $db->sql_query($sql);
     $row = $db->sql_fetchrow($result);
+
+    $callSum = $row['callSum'];
+    if (empty($callSum)) {
+        $initial_type = '%';
+        // Create the SQL statement
+        $sql = "SELECT callSum, U.address, type, U.agency as raw_agency, U.station, units, (Select DISTRICT From `oregon911_cad`.`pdx911_stations` AS S WHERE U.STATION = S.ABBV and U.county = S.county) as agency, U.lat, U.lon, icon, timestamp, 1 AS CACT FROM `oregon911_cad`.`pdx911_calls` AS U WHERE U.GUID = '" . $GUID . "' AND U.county = '" . $county . "' AND U.county != 'M' AND U.type LIKE '" . $initial_type . "'  UNION ALL SELECT callSum, U.address, type, U.agency as raw_agency, U.station, units, (Select DISTRICT From `oregon911_cad`.`pdx911_stations` AS S WHERE U.STATION = S.ABBV and U.county = S.county AND S.county != 'M') as agency, U.lat, U.lon, icon, timestamp, 0 AS CACT FROM `oregon911_cad`.`pdx911_archive` AS U WHERE U.county != 'M' AND U.GUID = '" . $GUID . "' AND U.county = '" . $county . "'  AND U.type LIKE '" . $initial_type . "' ";
+
+// Run the query 
+        $result = $db->sql_query($sql);
+        $row = $db->sql_fetchrow($result);
+    }
 
     $callSum = $row['callSum'];
     $address = $row['address'];
@@ -177,7 +187,7 @@ if ($found) {
             <tr>
                 <th scope="row">Call Type</th>
                 <td><?php
-                    echo ('<a href="./search?county=' . $county . '&calltype=' . urlencode($callSum) . '">' . $callSum . '</a>');
+                    echo ('<a href="/search?county=' . $county . '&calltype=' . urlencode($callSum) . '">' . $callSum . '</a>');
                     ?></td>
             </tr>
             <tr>
@@ -201,7 +211,7 @@ if ($found) {
             <tr>
                 <th scope="row">Address</th>
                 <td><?php
-                    echo ('<a href="./search?county=' . $county . '&address=' . urlencode($address) . '">' . $address . '</a>');
+                    echo ('<a href="/search?county=' . $county . '&address=' . urlencode($address) . '">' . $address . '</a>');
                     ?></td>
             </tr>
             <tr>
@@ -209,10 +219,10 @@ if ($found) {
                 <th scope="row">Agency</th>
                 <td><?php
                     if ($type == "P") {
-                        echo ("<a href=\"./agency?agency=" . rawurlencode($agencyRaw) . "&county=" . $county . "\">" . $agencyRaw . "</a>");
+                        echo ("<a href=\"/agency?agency=" . rawurlencode($agencyRaw) . "&county=" . $county . "\">" . $agencyRaw . "</a>");
                     } else {
                         if (!empty($agency)) {
-                            echo ("<a href=\"./agency?agency=" . rawurlencode($agency) . "&county=" . $county . "\">" . $agency . "</a>");
+                            echo ("<a href=\"/agency?agency=" . rawurlencode($agency) . "&county=" . $county . "\">" . $agency . "</a>");
                         } else {
                             echo ("Unknown");
                         }
@@ -222,7 +232,7 @@ if ($found) {
             </tr>
             <th scope="row">Station</th>
             <td><?php
-                echo ('<a href="./station?station=' . $station . '&county=' . $county . '">' . $station . '</a>');
+                echo ('<a href="/station?station=' . $station . '&county=' . $county . '">' . $station . '</a>');
                 ?></td>
         </tr>
         <tr>
@@ -319,7 +329,7 @@ if ($found) {
         $sql = "SELECT *, S.DISTRICT as agency, S.ABBV as station FROM `oregon911_cad`.`pdx911_units` aS U LEFT JOIN `oregon911_cad`.`pdx911_stations` AS S ON U.STATION = ABBV and U.county = S.county WHERE U.type LIKE '" . $initial_type . "' AND U.GUID = '$GUID' and U.county = '$county' AND U.unit NOT IN (Select flag From `oregon911_cad`.`pdx911_callSum_flags`)";
         $result = $db->sql_query($sql);
         while ($row = $result->fetch_assoc()) {
-            echo '<tr><th><a href="./unitinfo?unit=' . $row['unit'] . '&county=' . $row['county'] . '">' . $row['unit'] . '</a></th><th><a href="./agency?agency=' . rawurlencode($row['agency']) . '&county=' . $county . '">' . $row['agency'] . '</a></th><th><a href="./station?station=' . $row['station'] . '&county=' . $row['county'] . '">' . $row['station'] . '</a></th>';
+            echo '<tr><th><a href="/unitinfo?unit=' . $row['unit'] . '&county=' . $row['county'] . '">' . $row['unit'] . '</a></th><th><a href="/agency?agency=' . rawurlencode($row['agency']) . '&county=' . $county . '">' . $row['agency'] . '</a></th><th><a href="/station?station=' . $row['station'] . '&county=' . $row['county'] . '">' . $row['station'] . '</a></th>';
             if ($row['clear'] != '00:00:00') {
                 echo( '<th>' . $row['dispatched'] . '</th>' . '<th>' . $row['enroute'] . '<th>' . $row['onscene'] . '</th>' . '<th style="background-color:#787878; color:white">' . $row['clear'] . '</th>');
             } else if ($row['onscene'] != '00:00:00') {
@@ -343,7 +353,7 @@ if ($found) {
         $sql = "SELECT *, S.DISTRICT as agency, S.ABBV as station FROM `oregon911_cad`.`pdx911_units` aS U LEFT JOIN `oregon911_cad`.`pdx911_stations` AS S ON U.STATION = ABBV and U.county = S.county WHERE U.type LIKE '" . $initial_type . "' AND U.GUID = '$GUID' and U.county = '$county' AND U.unit NOT IN (Select flag From `oregon911_cad`.`pdx911_callSum_flags`)";
         $result = $db->sql_query($sql);
         while ($row = $result->fetch_assoc()) {
-            echo '<tr><th><a href="./unitinfo?unit=' . $row['unit'] . '&county=' . $row['county'] . '">' . $row['unit'] . '</a></th>';
+            echo '<tr><th><a href="/unitinfo?unit=' . $row['unit'] . '&county=' . $row['county'] . '">' . $row['unit'] . '</a></th>';
             if ($row['clear'] != '00:00:00') {
                 echo( '<th style="background-color:#787878; color:white">CLEAR</th>');
             } else if ($row['onscene'] != '00:00:00') {
@@ -466,11 +476,11 @@ if ($found) {
             }
         </style>
 
-        <link type="text/css" rel="stylesheet" href="css/main.css" />
-        <link type="text/css" rel="stylesheet" href="./src/css/jquery.mmenu.all.css" />
+        <link type="text/css" rel="stylesheet" href="/css/main.css" />
+        <link type="text/css" rel="stylesheet" href="/src/css/jquery.mmenu.all.css" />
         <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-label/v0.2.1/leaflet.label.css' rel='stylesheet' />
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-        <script type="text/javascript" src="./src/js/jquery.mmenu.min.all.js"></script>
+        <script type="text/javascript" src="/src/js/jquery.mmenu.min.all.js"></script>
         <style>
             html, body { height:100%; }
         </style>
@@ -712,7 +722,7 @@ if ($found) {
                                     $sql = "SELECT * FROM `oregon911_cad`.`pdx911_archive` WHERE county != 'M' AND address='$address' and county='$county' and GUID != '$GUID' order by timestamp DESC Limit 10";
                                     $result = $db->sql_query($sql);
                                     while ($row = $result->fetch_assoc()) {
-                                        echo '<tr><th>' . $row['timestamp'] . '</th><th>' . $row['GUID'] . '</th><th>' . $row['callSum'] . '</th><th><a href="./call?call=' . $row['GUID'] . '&county=' . $row['county'] . '&type=' . $row['type'] . '">Call Log</a></th></tr>';
+                                        echo '<tr><th>' . $row['timestamp'] . '</th><th>' . $row['GUID'] . '</th><th>' . $row['callSum'] . '</th><th><a href="/call?call=' . $row['GUID'] . '&county=' . $row['county'] . '&type=' . $row['type'] . '">Call Log</a></th></tr>';
                                     }
                                     echo '</table>';
                                     ?>
@@ -728,7 +738,7 @@ if ($found) {
                                     $sql = "SELECT * FROM `oregon911_cad`.`pdx911_archive` WHERE county != 'M' AND address='$address' and county='$county' and GUID != '$GUID' order by timestamp DESC Limit 10";
                                     $result = $db->sql_query($sql);
                                     while ($row = $result->fetch_assoc()) {
-                                        echo '<tr><th>' . $row['timestamp'] . '</th><th>' . $row['callSum'] . '</th><th><a href="./call?call=' . $row['GUID'] . '&county=' . $row['county'] . '&type=' . $row['type'] . '">Call Log</a></th></tr>';
+                                        echo '<tr><th>' . $row['timestamp'] . '</th><th>' . $row['callSum'] . '</th><th><a href="/call?call=' . $row['GUID'] . '&county=' . $row['county'] . '&type=' . $row['type'] . '">Call Log</a></th></tr>';
                                     }
                                     echo '</table>';
                                     ?>
@@ -780,7 +790,7 @@ if ($found) {
                 </div>
             </div>
 
-            <?PHP include ("./inc/nav.php"); ?>
+            <?PHP include ("inc/nav.php"); ?>
 
         </div>
         <script type = "text/javascript">
@@ -805,20 +815,20 @@ if ($found) {
                 auto_refresh();
             });
             function auto_refresh() {
-                $('#callinfo').load('?AJAX_REFRESH=callinfo&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
-                $('#calllog-all').load('?AJAX_REFRESH=calllog-all&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
-                $('#calllog').load('?AJAX_REFRESH=calllog&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
-                $('#units').load('?AJAX_REFRESH=units&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
+                $('#callinfo').load('/call?AJAX_REFRESH=callinfo&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
+                $('#calllog-all').load('/call?AJAX_REFRESH=calllog-all&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
+                $('#calllog').load('/call?AJAX_REFRESH=calllog&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
+                $('#units').load('/call?AJAX_REFRESH=units&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
                 $('#units-mobile').load('?AJAX_REFRESH=units-mobile&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
-                $('#flags').load('?AJAX_REFRESH=flags&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
-                $('#changelog').load('?AJAX_REFRESH=changelog&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
+                $('#flags').load('/call?AJAX_REFRESH=flags&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
+                $('#changelog').load('/call?AJAX_REFRESH=changelog&call=<?PHP echo($GUID); ?>&county=<?PHP echo($county); ?>&type=<?PHP echo($_GET['type']); ?>').fadeIn("slow");
             }
 <?PHP if ($active) { ?>
                 var refreshId = setInterval(auto_refresh, 20000);
 <?PHP } ?>
         </script>
-        <script type="text/javascript" src="./js/leaflet.js"></script>
-        <script type="text/javascript" src="./js/leaflet.label.js"></script>
+        <script type="text/javascript" src="/js/leaflet.js"></script>
+        <script type="text/javascript" src="/js/Leaflet.label.js"></script>
         <script async type='text/javascript'>
             var myCalls = [];
             // create a map in the "map" div, set the view to a given place and zoom
@@ -885,7 +895,7 @@ if ($found) {
             L.control.layers(baseLayers, overlays).addTo(map);
 
 <?PHP
-echo ('addMarker(1,"' . $type . ' ' . $station . ' ' . $GUID . ' ' . str_replace("'", "\'", $callSum) . ' | ' . $address . '  | ' . $units . '", ' . $lat . ', ' . $long . ', 32, 37, "' . $icon . '","' . $callSum . '",true);');
+echo ('addMarker(1,"' . htmlspecialchars($type . ' ' . $station . ' ' . $GUID . ' ' . str_replace("'", "\'", $callSum) . ' | ' . $address . '  | ' . $units) . '", ' . $lat . ', ' . $long . ', 32, 37, "' . $icon . '","' . htmlspecialchars($callSum) . '",true);');
 ?>
 // deletes all markers on map;
             function clearMap() {

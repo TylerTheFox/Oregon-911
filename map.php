@@ -80,7 +80,7 @@ $sql = "SELECT * FROM `oregon911_cad`.`pdx911_calls` WHERE county != 'M' ORDER B
 $result = $db->sql_query($sql);
 while ($rows = $result->fetch_assoc()) {
     $info_string = '<div>' . '<h1> Call: ' . $rows['callSum'] . '</h1>' . '<h3> Address: ' . $rows['address'] . '</h3>' . '<p>Station: ' . $rows['station'] . '</p>' . '<p> Time: ' . $rows['timestamp'] . '</p>' . '<table style="width:100%;"><tr><th>Unit</th><th>Station</th><th>Dispatched</th><th>Enroute<th>Onscene</th><th>Clear</th>';
-    $sql = "SELECT * FROM `oregon911_cad`.`pdx911_units` WHERE GUID='" . $rows['GUID'] . "' and county='" . $rows['county'] . "' and county != 'M'";
+    $sql = "SELECT * FROM `oregon911_cad`.`pdx911_units` WHERE GUID='" . $rows['GUID'] . "' and type='" . $rows['type'] . "' and county='" . $rows['county'] . "' and county != 'M'";
     $unit_result = $db->sql_query($sql);
     while ($unit_row = $unit_result->fetch_assoc()) {
         $info_string .= '<tr><th>' . $unit_row['unit'] . '</th><th>' . $unit_row['station'] . '</th><th>' . $unit_row['dispatched'] . '</th><th>' . $unit_row['enroute'] . '<th>' . $unit_row['onscene'] . '</th><th>' . $unit_row['clear'] . '</th></tr>';

@@ -69,6 +69,8 @@ require_once("google.php");
             var police = new L.LayerGroup();
             var accidents = new L.LayerGroup();
             var firestations = new L.LayerGroup();
+            var hydrants = new L.LayerGroup();
+            var hospitals = new L.LayerGroup();
             var TrfAccid = [" BLOCKING", "CRASH, UNK INJ", "TAI-MAJOR INCIDE", "TRF ACC, UNK INJ", "BLOCKING", "NOT BLOCKING", "TRF ACC, INJURY", "MVA-INJURY ACCID", "TRF ACC, NON-INJ", "TAI-TRAPPED VICT", "TAI-HIGH MECHANI", "TAI-PT NOT ALERT", "MVA-UNK INJURY"];
 
 // create a map in the "map" div, set the view to a given place and zoom
@@ -78,6 +80,18 @@ require_once("google.php");
                 zoom: 11,
                 layers: [fire, EMS, police, accidents, firestations]
             });
+            
+            L.tileLayer("http://openfiremap.org/hytiles/{z}/{x}/{y}.png", {
+                attribution: '&copy; <a href="http://openfiremap.org">OpenFireMap</a> contributors',
+                minZoom: 0,
+                maxZoom: 19
+            }).addTo(hydrants);
+
+            L.tileLayer('http://openfiremap.org/eytiles/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://openfiremap.org">OpenFireMap</a> contributors',
+                minZoom: 0,
+                maxZoom: 19
+            }).addTo(hospitals);
 
             // add an OpenStreetMap tile layer
             var OSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -135,7 +149,9 @@ require_once("google.php");
                 "EMS": EMS,
                 "Police": police,
                 "Accidents": accidents,
-                "Fire Stations": firestations
+                "Fire Stations": firestations//,
+                //"Hydrants": hydrants,
+                //"Hospitals": hospitals
             };
 
             L.control.layers(baseLayers, overlays).addTo(map);
@@ -145,10 +161,10 @@ require_once("google.php");
                 for (var i = 0; i < myCalls.length; i++) {
                     //  if (myCalls[i].id === idx) {
                     //console.log("Updating call: " + myCalls[i].id);
-                    
-                    console.log( ("P" !== myCalls[i].layer) );
+
+                    console.log(("P" !== myCalls[i].layer));
                     console.log(myCalls[i].layer + " | " + "P");
-                    
+
                     if ((!"P" === myCalls[i].layer) && (!myCalls[i].layer === 'accidents')) {
                         console.log("Cleaning " + myCalls[i].id + " " + myCalls[i].layer)
                         //  cleanLayer(myCalls[i]);
@@ -189,21 +205,11 @@ require_once("google.php");
             }
 
 // Positions the label correctly.. enough
-            function getLabelOffset(labelname) {
-                var offset = 0;
-                if (labelname.length <= 5) {
-                    offset = -(40 - labelname.length / 2);
-                } else if ((labelname.length > 5) && (labelname.length < 10)) {
-                    offset = -(55 - labelname.length / 2);
-                } else if ((labelname.length > 10) && (labelname.length < 16)) {
-                    offset = -(77 - labelname.length / 2);
-                } else if ((labelname.length > 16) && (labelname.length < 21)) {
-                    offset = -(82 - labelname.length / 2);
-                } else {
-                    offset = -(85 - labelname.length / 2);
-                }
-                return offset;
-            }
+			function getLabelOffset(labelname) {
+				var offset = 30 + (35 % 35 + (3 * labelname.length));
+				return -offset;
+			}
+
 
 // Changes call to another layer group.
             function changeLayer(myCall, type, isMVA) {
@@ -222,7 +228,7 @@ require_once("google.php");
                         myCall.call.addTo(police);
                     } else {
                         var layer = "other";
-                       myCall.call.addTo(map);
+                        myCall.call.addTo(map);
                     }
                 }
                 return layer;
@@ -425,7 +431,6 @@ require_once("google.php");
                 getMarkerData();
                 firstrun = false;
             }
-            ajaxObj.get();
         </script>
         <script type="text/javascript" src="https://www.google.com/jsapi"></script>
         <?PHP echo($analytics); ?>
