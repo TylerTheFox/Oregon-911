@@ -1,5 +1,2 @@
-User-agent: Twitterbot
-Allow: /
-
 User-agent: *
-Disallow: /map
+Crawl-delay: 5.00

@@ -1,5 +1,5 @@
 <?PHP
-require_once("loggedin.php");
+require_once("database.php");
 require_once("google.php");
 ?>
 <!DOCTYPE html>
@@ -18,12 +18,11 @@ require_once("google.php");
         <script type="text/javascript" src="./js/leaflet.js"></script>
         <script type="text/javascript" src="./js/Leaflet.label.js"></script>
         <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-label/v0.2.1/leaflet.label.css' rel='stylesheet' />
-
     </head>
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
+                <a href="#menu" class="main-menu"></a>
                 Oregon 911 - Map
             </div>
             <div class="content">
@@ -43,17 +42,10 @@ require_once("google.php");
                         <a class="alert" href="#alert"><?PHP echo($row['Message']); ?></a>
                     </div> 
                     <br>
-                    <br>
                     <?PHP
                 }
                 ?>
-
-
-
                 <div id='map' style="height:96vh; width: 100%; overflow:hidden;"></div>
-
-
-
             </div>
             <?PHP include ("./inc/nav.php"); ?>
         </div>
@@ -72,6 +64,9 @@ require_once("google.php");
             var hydrants = new L.LayerGroup();
             var hospitals = new L.LayerGroup();
             var TrfAccid = [" BLOCKING", "CRASH, UNK INJ", "TAI-MAJOR INCIDE", "TRF ACC, UNK INJ", "BLOCKING", "NOT BLOCKING", "TRF ACC, INJURY", "MVA-INJURY ACCID", "TRF ACC, NON-INJ", "TAI-TRAPPED VICT", "TAI-HIGH MECHANI", "TAI-PT NOT ALERT", "MVA-UNK INJURY"];
+            var updateAllowed = true; // Bug fix in Leaflet Labels
+            var OR911TileErrorCount = 0;
+            var failOver = false;
 
 // create a map in the "map" div, set the view to a given place and zoom
 // initialize the map on the "map" div with a given center and zoom
@@ -80,7 +75,15 @@ require_once("google.php");
                 zoom: 11,
                 layers: [fire, EMS, police, accidents, firestations]
             });
-            
+
+            map.on('zoomstart', function () {
+                updateAllowed = false;
+            });
+
+            map.on('zoomend', function () {
+                updateAllowed = true;
+            });
+
             L.tileLayer("http://openfiremap.org/hytiles/{z}/{x}/{y}.png", {
                 attribution: '&copy; <a href="http://openfiremap.org">OpenFireMap</a> contributors',
                 minZoom: 0,
@@ -93,16 +96,26 @@ require_once("google.php");
                 maxZoom: 19
             }).addTo(hospitals);
 
-            // add an OpenStreetMap tile layer
-            var OSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; Brandan Lasley 2015 Map &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+            // Oregon 911 tile layer, HTTPS not supported.
+            var OR911_OSM = L.tileLayer('http://www.server2.oregon911.net/osm/{z}/{x}/{y}.png', {
+                attribution: '&copy; Brandan Lasley 2015 Map &copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
                 minZoom: 0,
-                maxZoom: 19
+                maxZoom: 18
             }).addTo(map);
+
+            OR911_OSM.on('tileerror', function (error, tile) {
+                if (OR911TileErrorCount > 3) {
+                    // OR911s tile server is offline or slow, switch to OSM.
+                    OR911TileServerOffline();
+                } else {
+                    // Don't continue counting.
+                    OR911TileErrorCount++;
+                }
+            });
 
 
             // https: also suppported.
-            var HERE_hybridDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/hybrid.day/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+            var HERE_hybridDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/hybrid.day/{z}/{x}/{y}/256/png8?app_id=Yf8CiPvTiOOwEUHMvSz4&app_code=EAM6lcJb4d0C3sA93UbmEQ', {
                 attribution: '&copy; Brandan Lasley 2015 Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
                 subdomains: '1234',
                 mapID: 'newest',
@@ -114,7 +127,7 @@ require_once("google.php");
             });
 
             // https: also suppported.
-            var HERE_normalNight = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/normal.night/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+            var HERE_normalNight = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/normal.night/{z}/{x}/{y}/256/png8?app_id=Yf8CiPvTiOOwEUHMvSz4&app_code=EAM6lcJb4d0C3sA93UbmEQ', {
                 attribution: '&copy; Brandan Lasley 2015 Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
                 subdomains: '1234',
                 mapID: 'newest',
@@ -126,7 +139,7 @@ require_once("google.php");
             });
 
             // https: also suppported.
-            var HERE_terrainDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/terrain.day/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+            var HERE_terrainDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/terrain.day/{z}/{x}/{y}/256/png8?app_id=Yf8CiPvTiOOwEUHMvSz4&app_code=EAM6lcJb4d0C3sA93UbmEQ', {
                 attribution: '&copy; Brandan Lasley 2015 Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
                 subdomains: '1234',
                 mapID: 'newest',
@@ -138,7 +151,7 @@ require_once("google.php");
             });
 
             var baseLayers = {
-                "Standard": OSM,
+                "Standard": OR911_OSM,
                 "Night Map": HERE_normalNight,
                 "Satellite": HERE_hybridDay,
                 "Terrain": HERE_terrainDay
@@ -150,39 +163,17 @@ require_once("google.php");
                 "Police": police,
                 "Accidents": accidents,
                 "Fire Stations": firestations//,
-                //"Hydrants": hydrants,
-                //"Hospitals": hospitals
+                        //"Hydrants": hydrants,
+                        //"Hospitals": hospitals
             };
 
             L.control.layers(baseLayers, overlays).addTo(map);
 
-            // Debug
-            function debug1() {
-                for (var i = 0; i < myCalls.length; i++) {
-                    //  if (myCalls[i].id === idx) {
-                    //console.log("Updating call: " + myCalls[i].id);
-
-                    console.log(("P" !== myCalls[i].layer));
-                    console.log(myCalls[i].layer + " | " + "P");
-
-                    if ((!"P" === myCalls[i].layer) && (!myCalls[i].layer === 'accidents')) {
-                        console.log("Cleaning " + myCalls[i].id + " " + myCalls[i].layer)
-                        //  cleanLayer(myCalls[i]);
-                        //  myCalls[i].layer = changeLayer(myCalls[i], isAccident(labelname));
-                    }
-                }
-                //}
-            }
-
 // deletes all markers on map;
             function clearMap() {
                 for (var i = 0; i < myCalls.length; i++) {
-                    if (!(myCalls[i].id.indexOf("stadic") > -1)) {
-                        myCalls[i].call.unbindLabel();
-                        cleanLayer(myCalls[i]);
-                    }
+                    map.removeLayer(myCalls[i].call);
                 }
-                myCalls = [];
                 return true;
             }
 
@@ -205,10 +196,10 @@ require_once("google.php");
             }
 
 // Positions the label correctly.. enough
-			function getLabelOffset(labelname) {
-				var offset = 30 + (35 % 35 + (3 * labelname.length));
-				return -offset;
-			}
+            function getLabelOffset(labelname) {
+                var offset = 30 + (35 % 35 + (3 * labelname.length));
+                return -offset;
+            }
 
 
 // Changes call to another layer group.
@@ -398,12 +389,15 @@ require_once("google.php");
             }
 
             function setMarkers(locObj) {
-                var tmpMyCalls = [];
-                $.each(locObj, function (key, loc) {
-                    tmpMyCalls.push(key);
-                    addMarker(key, loc.info, loc.lat, loc.lng, loc.type, loc.iconW, loc.iconH, loc.icon, loc.labelname, loc.label);
-                });
-                cleanMarkers(tmpMyCalls);
+                navigator.geolocation.getCurrentPosition(successHandler, errorHandler); // User Geolocation stuff
+                if (updateAllowed) {
+                    var tmpMyCalls = [];
+                    $.each(locObj, function (key, loc) {
+                        tmpMyCalls.push(key);
+                        addMarker(key, loc.info, loc.lat, loc.lng, loc.type, loc.iconW, loc.iconH, loc.icon, loc.labelname, loc.label);
+                    });
+                    cleanMarkers(tmpMyCalls);
+                }
             }
 
 // Remove markers no longer existing. 
@@ -417,7 +411,9 @@ require_once("google.php");
                             }
                         }
                         if (found === false) {
-                            removeMarker(myCalls[i].id);
+                            if (!(myCalls[i].id.indexOf("donotremove") > -1)) {
+                                removeMarker(myCalls[i].id);
+                            }
                         }
                     } else {
                         //console.log("================= REMOVING ALL CALLS! =================" + myCalls[i].id);
@@ -426,10 +422,36 @@ require_once("google.php");
                 }
             }
 
-            // Run
+            function getZoom() {
+                alert(map.getZoom());
+            }
+
+// Run
             if (firstrun) {
                 getMarkerData();
                 firstrun = false;
+            }
+
+            function OR911TileServerOffline() {
+                if (!failOver) {
+                    map.removeLayer(OR911_OSM);
+                    // Fall back to OSM tile server
+                    OR911_OSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+                        minZoom: 0,
+                        maxZoom: 19
+                    }).addTo(map);
+
+                    console.log("Oregon 911 tile server not responding...");
+                    failOver = true;
+                }
+            }
+// User Geolocation stuff
+            function errorHandler(error) {
+// sad face :(
+            }
+            function successHandler(location) {
+                addMarker("donotremove1", "<div style='width: 200px;'><b>YOU</b> <p>Accuracy: &#177; " + location.coords.accuracy + " meters</p></div>", location.coords.latitude, location.coords.longitude, "other", 11, 11, "./images/MISC/pos.png", 0, false);
             }
         </script>
         <script type="text/javascript" src="https://www.google.com/jsapi"></script>

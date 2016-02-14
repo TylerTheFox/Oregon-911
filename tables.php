@@ -3,7 +3,7 @@ $time = microtime();
 $time = explode(' ', $time);
 $time = $time[1] + $time[0];
 $start = $time;
-require_once("loggedin.php");
+require_once("database.php");
 require_once("google.php");
 $mode = $_GET['mode'];
 ?>
@@ -28,7 +28,7 @@ $mode = $_GET['mode'];
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
+                <a href="#menu" class="main-menu"></a>
                 Oregon 911 - Tables
             </div>
             <?PHP
@@ -133,7 +133,7 @@ $mode = $_GET['mode'];
             </div>
 
             <?PHP include ("./inc/nav.php");
-            echo '<p>Copyright &copy; ' . date("Y") . ' Brandan Lasley. All Rights Reserved.</p>';
+            echo '<p>Copyright &copy; ' . date("Y") . ' Oregon 911. All Rights Reserved.</p>';
             ?>
 
         </div>

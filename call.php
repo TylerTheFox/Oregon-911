@@ -408,15 +408,16 @@ if ($found) {
     if (isset($_GET['zoom'])) {
         $zoom = $_GET['zoom'];
     }
-    $H = 300;
+    $H = 270;
     if (isset($_GET['H'])) {
         $H = $_GET['H'];
     }
-    $W = 530;
+    $W = 540;
     if (isset($_GET['W'])) {
         $W = $_GET['W'];
     }
-    $TwitterCardIMG = "https://maps.google.com/maps/api/staticmap?center=$lat,$long&markers=icon:http://cad.oregon911.net/$icon|$lat,$long&zoom=$zoom&size=" . $W . "x" . $H . "&sensor=false";
+
+    $TwitterCardIMG = "http://www.cad.oregon911.net/static/staticmap.php?center=$lat,$long&zoom=$zoom&size=$W\x$H&markers=$lat,$long,$icon";
     if ($_GET['img'] == "Y") {
         $im = file_get_contents($TwitterCardIMG);
         header('content-type: image/gif');
@@ -489,7 +490,7 @@ if ($found) {
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
+                <a href="#menu" class="main-menu"></a>
                 Oregon 911 - Incident
             </div>
             <?PHP
@@ -770,6 +771,11 @@ if ($found) {
                                     </details>
                                 </div>
                             </details>
+                            
+                            <details <?php echo ($theme); ?> open=true>
+                                <summary>Other Incidents</summary>
+                                <?PHP echo($matched_content_ad); ?>
+                            </details>
                             <!-- ====================================================================================== -->
                             <?php
                             $time = microtime();
@@ -778,7 +784,7 @@ if ($found) {
                             $finish = $time;
                             $total_time = round(($finish - $start), 4);
                             echo '<p>Page generated in ' . $total_time . ' seconds.</p>';
-                            echo '<p>Copyright &copy; ' . date("Y") . ' Brandan Lasley. All Rights Reserved.</p>';
+                            echo '<p>Copyright &copy; ' . date("Y") . ' Oregon 911. All Rights Reserved.</p>';
                             ?>
                             <?PHP
                         }
@@ -829,25 +835,60 @@ if ($found) {
         </script>
         <script type="text/javascript" src="/js/leaflet.js"></script>
         <script type="text/javascript" src="/js/Leaflet.label.js"></script>
+
         <script async type='text/javascript'>
             var myCalls = [];
-            // create a map in the "map" div, set the view to a given place and zoom
-            // initialize the map on the "map" div with a given center and zoom
+            var fire = new L.LayerGroup();
+            var EMS = new L.LayerGroup();
+            var police = new L.LayerGroup();
+            var accidents = new L.LayerGroup();
+            var firestations = new L.LayerGroup();
+            var hydrants = new L.LayerGroup();
+            var hospitals = new L.LayerGroup();
+            var TrfAccid = [" BLOCKING", "CRASH, UNK INJ", "TAI-MAJOR INCIDE", "TRF ACC, UNK INJ", "BLOCKING", "NOT BLOCKING", "TRF ACC, INJURY", "MVA-INJURY ACCID", "TRF ACC, NON-INJ", "TAI-TRAPPED VICT", "TAI-HIGH MECHANI", "TAI-PT NOT ALERT", "MVA-UNK INJURY"];
+            var OR911TileErrorCount = 0;
+            var failOver = false;
+
+// create a map in the "map" div, set the view to a given place and zoom
+// initialize the map on the "map" div with a given center and zoom
             var map = L.map('map', {
                 center: [<?PHP echo ($lat); ?>, <?PHP echo ($long); ?>],
-                zoom: 16
+                zoom: 16,
+                layers: [fire, EMS, police, accidents, firestations]
             });
 
-            // add an OpenStreetMap tile layer
-            var OSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; Brandan Lasley 2015 Map &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+            L.tileLayer("http://openfiremap.org/hytiles/{z}/{x}/{y}.png", {
+                attribution: '&copy; <a href="http://openfiremap.org">OpenFireMap</a> contributors',
                 minZoom: 0,
                 maxZoom: 19
+            }).addTo(hydrants);
+
+            L.tileLayer('http://openfiremap.org/eytiles/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://openfiremap.org">OpenFireMap</a> contributors',
+                minZoom: 0,
+                maxZoom: 19
+            }).addTo(hospitals);
+
+            // Oregon 911 tile layer, HTTPS not supported.
+            var OR911_OSM = L.tileLayer('http://www.server2.oregon911.net/osm/{z}/{x}/{y}.png', {
+                attribution: '&copy; Brandan Lasley 2015 Map &copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+                minZoom: 0,
+                maxZoom: 18
             }).addTo(map);
+
+            OR911_OSM.on('tileerror', function (error, tile) {
+                if (OR911TileErrorCount > 3) {
+                    // OR911s tile server is offline or slow, switch to OSM.
+                    OR911TileServerOffline();
+                } else {
+                    // Don't continue counting.
+                    OR911TileErrorCount++;
+                }
+            });
 
 
             // https: also suppported.
-            var HERE_hybridDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/hybrid.day/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+            var HERE_hybridDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/hybrid.day/{z}/{x}/{y}/256/png8?app_id=Yf8CiPvTiOOwEUHMvSz4&app_code=EAM6lcJb4d0C3sA93UbmEQ', {
                 attribution: '&copy; Brandan Lasley 2015 Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
                 subdomains: '1234',
                 mapID: 'newest',
@@ -859,7 +900,7 @@ if ($found) {
             });
 
             // https: also suppported.
-            var HERE_normalNight = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/normal.night/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+            var HERE_normalNight = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/normal.night/{z}/{x}/{y}/256/png8?app_id=Yf8CiPvTiOOwEUHMvSz4&app_code=EAM6lcJb4d0C3sA93UbmEQ', {
                 attribution: '&copy; Brandan Lasley 2015 Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
                 subdomains: '1234',
                 mapID: 'newest',
@@ -871,7 +912,7 @@ if ($found) {
             });
 
             // https: also suppported.
-            var HERE_terrainDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/terrain.day/{z}/{x}/{y}/256/png8?app_id={app_id}&app_code={app_code}', {
+            var HERE_terrainDay = L.tileLayer('http://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/terrain.day/{z}/{x}/{y}/256/png8?app_id=Yf8CiPvTiOOwEUHMvSz4&app_code=EAM6lcJb4d0C3sA93UbmEQ', {
                 attribution: '&copy; Brandan Lasley 2015 Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
                 subdomains: '1234',
                 mapID: 'newest',
@@ -883,20 +924,24 @@ if ($found) {
             });
 
             var baseLayers = {
-                "Standard": OSM,
+                "Standard": OR911_OSM,
                 "Night Map": HERE_normalNight,
                 "Satellite": HERE_hybridDay,
                 "Terrain": HERE_terrainDay
             };
 
             var overlays = {
+                "Fire": fire,
+                "EMS": EMS,
+                "Police": police,
+                "Accidents": accidents,
+                "Fire Stations": firestations//,
+                        //"Hydrants": hydrants,
+                        //"Hospitals": hospitals
             };
 
             L.control.layers(baseLayers, overlays).addTo(map);
 
-<?PHP
-echo ('addMarker(1,"' . htmlspecialchars($type . ' ' . $station . ' ' . $GUID . ' ' . str_replace("'", "\'", $callSum) . ' | ' . $address . '  | ' . $units) . '", ' . $lat . ', ' . $long . ', 32, 37, "' . $icon . '","' . htmlspecialchars($callSum) . '",true);');
-?>
 // deletes all markers on map;
             function clearMap() {
                 for (var i = 0; i < myCalls.length; i++) {
@@ -923,31 +968,260 @@ echo ('addMarker(1,"' . htmlspecialchars($type . ' ' . $station . ' ' . $GUID . 
                 return false;
             }
 
+// Positions the label correctly.. enough
+            function getLabelOffset(labelname) {
+                var offset = 30 + (35 % 35 + (3 * labelname.length));
+                return -offset;
+            }
+
+
+// Changes call to another layer group.
+            function changeLayer(myCall, type, isMVA) {
+                if (isMVA) {
+                    var layer = "accidents";
+                    myCall.call.addTo(accidents);
+                } else {
+                    if (type === "F") {
+                        var layer = "F";
+                        myCall.call.addTo(fire);
+                    } else if (type === "M") {
+                        var layer = "M";
+                        myCall.call.addTo(EMS);
+                    } else if (type === "P") {
+                        var layer = "P";
+                        myCall.call.addTo(police);
+                    } else {
+                        var layer = "other";
+                        myCall.call.addTo(map);
+                    }
+                }
+                return layer;
+            }
+
+// Is this an accident or a normal call?
+            function isAccident(labelname) {
+                for (var i = TrfAccid.length; i--; ) {
+                    if (TrfAccid[i] === labelname) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+// Remove call from current layer.
+            function cleanLayer(myCall) {
+                if (myCall.layer === "F") {
+                    fire.removeLayer(myCall.call);
+                } else if (myCall.layer === "M") {
+                    EMS.removeLayer(myCall.call);
+                } else if (myCall.layer === "P") {
+                    police.removeLayer(myCall.call);
+                } else if (myCall.layer === "accidents") {
+                    accidents.removeLayer(myCall.call);
+                } else {
+                    map.removeLayer(myCall.call);
+                }
+            }
+
 // Add Marker to map and return the created marker.
-            function addMarker(idx, html, lat, lng, iconW, iconH, iconURL, labelname, label) {
+            function addMarker(idx, html, lat, lng, type, iconW, iconH, iconURL, labelname, label) {
                 if (!searchMarkers(idx)) {
+                    //console.log("Adding call: " + idx);
                     var markerLocation = new L.LatLng(lat, lng);
-                    var Marker = L.Icon.Default.extend({
+                    var offset = getLabelOffset(labelname);
+                    var Marker = L.Icon.extend({
                         options: {
                             iconUrl: iconURL,
                             iconSize: [iconW, iconH],
-                            labelAnchor: new L.Point(10, -23),
-                            shadowSize: [0, 0]
+                            labelAnchor: new L.Point(offset, 35),
+                            zoomAnimation: false,
+                            clickable: true,
+                            shadowSize: [iconW, iconH]
                         }
                     });
                     var marker = new Marker();
 
-                    var callMarker = L.marker(markerLocation, {icon: marker}).addTo(map);
-
+                    if (isAccident(labelname)) {
+                        var layer = "accidents";
+                        var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(accidents).showLabel();
+                    } else {
+                        if (type === "F") {
+                            var layer = "F";
+                            var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(fire).showLabel();
+                        } else if (type === "M") {
+                            var layer = "M";
+                            var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(EMS).showLabel();
+                        } else if (type === "P") {
+                            var layer = "P";
+                            var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(police).showLabel();
+                        } else if (type === "FS") {
+                            var layer = "FS";
+                            var callMarker = L.marker(markerLocation, {icon: marker}).bindPopup(html).addTo(firestations).showLabel();
+                        } else {
+                            var layer = "other";
+                            if (label) {
+                                var callMarker = L.marker(markerLocation, {icon: marker}).bindLabel(labelname, {noHide: true}).bindPopup(html).addTo(map).showLabel();
+                            } else {
+                                var callMarker = L.marker(markerLocation, {icon: marker}).bindPopup(html).addTo(map);
+                            }
+                        }
+                    }
 
                     var callObj = {};
                     callObj['id'] = idx;
                     callObj['call'] = callMarker;
+                    callObj['layer'] = layer;
 
                     myCalls.push(callObj);
                     return true;
                 }
-                return updateMarker(idx, html, lat, lng, iconW, iconH, iconURL, labelname, label);
+                return updateMarker(idx, html, lat, lng, type, iconW, iconH, iconURL, labelname, label);
+            }
+
+// Updates Marker 
+            function updateMarker(idx, html, lat, lng, type, iconW, iconH, iconURL, labelname, label) {
+                if (!(idx.indexOf("stadic") > -1)) {
+                    var markerLocation = new L.LatLng(lat, lng);
+                    for (var i = 0; i < myCalls.length; i++) {
+                        if (myCalls[i].id === idx) {
+                            //console.log("Updating call: " + myCalls[i].id);
+                            var markerLocation = new L.LatLng(lat, lng);
+
+                            if ((type !== myCalls[i].layer) && (myCalls[i].layer !== 'accidents')) {
+                                console.log("Cleaning " + myCalls[i].id + " " + myCalls[i].layer)
+                                cleanLayer(myCalls[i]);
+                                myCalls[i].layer = changeLayer(myCalls[i], type, isAccident(labelname));
+                            }
+
+                            var offset = getLabelOffset(labelname);
+                            var Marker = L.icon({
+                                iconUrl: iconURL,
+                                iconSize: [iconW, iconH],
+                                labelAnchor: new L.Point(offset, 35),
+                                zoomAnimation: false,
+                                clickable: true,
+                                shadowSize: [iconW, iconH]
+                            });
+                            myCalls[i].call.unbindLabel();
+                            myCalls[i].call.setLatLng(markerLocation);
+                            myCalls[i].call.bindPopup(html);
+                            myCalls[i].call.setIcon(Marker);
+                            if (label) {
+                                myCalls[i].call.bindLabel(labelname, {noHide: true}).showLabel();
+                            }
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+// remove marker from map and data structure. This doesn't work.
+            function removeMarker(idx) {
+                console.log("Removing Marker" + idx);
+                for (var i = 0; i < myCalls.length; i++) {
+                    if (myCalls[i].id === idx) {
+                        myCalls[i].call.unbindLabel();
+                        cleanLayer(myCalls[i]);
+                        myCalls.splice(i, 1);
+                        return true;
+                    }
+                }
+                alert("Couldn't remove a marker, this should NOT happen... ever");
+                return false;
+            }
+
+            var firstrun = true;
+
+// JSON update
+            var ajaxObj = {
+                options: {
+                    url: "./map.php?cad=true",
+                    dataType: "json"
+                },
+                delay: 10000,
+                errorCount: 0,
+                errorThreshold: 15000,
+                ticker: null,
+                get: function () {
+                    if (ajaxObj.errorCount < ajaxObj.errorThreshold) {
+                        ajaxObj.ticker = setTimeout(getMarkerData, ajaxObj.delay);
+                    }
+                },
+                fail: function (jqXHR, textStatus, errorThrown) {
+                    console.log(errorThrown);
+                    ajaxObj.errorCount++;
+                }
+            };
+
+            function getMarkerData() {
+                $.ajax(ajaxObj.options)
+                        .done(setMarkers)
+                        .fail(ajaxObj.fail)
+                        .always(ajaxObj.get);
+            }
+
+            function setMarkers(locObj) {
+                navigator.geolocation.getCurrentPosition(successHandler, errorHandler); // User Geolocation stuff
+                var tmpMyCalls = [];
+                $.each(locObj, function (key, loc) {
+                    tmpMyCalls.push(key);
+                    addMarker(key, loc.info, loc.lat, loc.lng, loc.type, loc.iconW, loc.iconH, loc.icon, loc.labelname, loc.label);
+                });
+                cleanMarkers(tmpMyCalls);
+            }
+
+// Remove markers no longer existing. 
+            function cleanMarkers(tmpMyCalls) {
+                for (var i = 0; i < myCalls.length; i++) {
+                    if (tmpMyCalls.length > 0) {
+                        var found = false;
+                        for (var id = 0; id < tmpMyCalls.length; id++) {
+                            if (myCalls[i].id === tmpMyCalls[id]) {
+                                found = true;
+                            }
+                        }
+                        if (found === false) {
+                            if (!(myCalls[i].id.indexOf("donotremove") > -1)) {
+                                removeMarker(myCalls[i].id);
+                            }
+                        }
+                    } else {
+                        //console.log("================= REMOVING ALL CALLS! =================" + myCalls[i].id);
+                        clearMap();
+                    }
+                }
+            }
+
+            function OR911TileServerOffline() {
+                if (!failOver) {
+                    map.removeLayer(OR911_OSM);
+                    // Fall back to OSM tile server
+                    OR911_OSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+                        minZoom: 0,
+                        maxZoom: 19
+                    }).addTo(map);
+
+                    console.log("Oregon 911 tile server not responding...");
+                    failOver = true;
+                }
+            }
+// Run
+            if (firstrun) {
+                navigator.geolocation.getCurrentPosition(successHandler, errorHandler); // User Geolocation stuff
+
+<?PHP
+echo ('addMarker("1", "' . htmlspecialchars($type . ' ' . $station . ' ' . $GUID . ' ' . str_replace("'", "\'", $callSum) . ' | ' . $address . '  | ' . $units) . '",' . $lat . ',' . $long . ', "X", 32, 37, "' . $icon . '", "' . htmlspecialchars($callSum) . '", true);');
+?>
+
+            }
+// User Geolocation stuff
+            function errorHandler(error) {
+// sad face :(
+            }
+            function successHandler(location) {
+                addMarker("donotremove1", "<div style='width: 200px;'><b>YOU</b> <p>Accuracy: &#177; " + location.coords.accuracy + " meters</p></div>", location.coords.latitude, location.coords.longitude, "other", 11, 11, "./images/MISC/pos.png", 0, false);
             }
         </script>
     </body>

@@ -3,7 +3,7 @@ $time = microtime();
 $time = explode(' ', $time);
 $time = $time[1] + $time[0];
 $start = $time;
-require_once("loggedin.php");
+require_once("database.php");
 require_once("google.php");
 
 if (!empty($_GET['AJAX_REFRESH'])) {
@@ -74,7 +74,7 @@ if (!empty($_GET['AJAX_REFRESH'])) {
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
+                <a href="#menu" class="main-menu"></a>
                 Oregon 911 - Scanners
             </div>
             <?PHP

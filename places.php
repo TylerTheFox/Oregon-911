@@ -246,7 +246,7 @@ if (ISSET($_GET['del'])) {
             $finish = $time;
             $total_time = round(($finish - $start), 4);
             echo '<p>Page generated in ' . $total_time . ' seconds.</p>';
-            echo '<p>Copyright &copy; ' . date("Y") . ' Brandan Lasley. All Rights Reserved.</p>';
+            echo '<p>Copyright &copy; ' . date("Y") . ' Oregon 911. All Rights Reserved.</p>';
             ?>
 
         </div>

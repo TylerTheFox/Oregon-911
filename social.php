@@ -3,7 +3,7 @@ $time = microtime();
 $time = explode(' ', $time);
 $time = $time[1] + $time[0];
 $start = $time;
-require_once("loggedin.php");
+require_once("database.php");
 require_once("google.php");
 ?>
 <!DOCTYPE html>
@@ -27,7 +27,7 @@ require_once("google.php");
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
+                <a href="#menu" class="main-menu"></a>
                 Oregon 911 - Social
             </div>
             <?PHP
@@ -63,7 +63,7 @@ require_once("google.php");
                                 echo('<div style="background-color: #FFF;">');
                             }
                             ?>
-                        <h1> Call Log: <?php echo ($callSum); ?> </h1>
+                        <h1> Social Media: </h1>
                         <center>
                             <?PHP
                             if (!$mobile) {
@@ -149,7 +149,7 @@ require_once("google.php");
                         <br>
                         <br>
                         <?php
-                        echo '<p>Copyright &copy; ' . date("Y") . ' Brandan Lasley. All Rights Reserved.</p>';
+                        echo '<p>Copyright &copy; ' . date("Y") . ' Oregon 911. All Rights Reserved.</p>';
                         ?>
 
                         <!-- ====================================================================================== -->

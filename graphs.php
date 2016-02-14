@@ -3,7 +3,7 @@ $time = microtime();
 $time = explode(' ', $time);
 $time = $time[1] + $time[0];
 $start = $time;
-require_once("loggedin.php");
+require_once("database.php");
 require_once("google.php");
 $mode = $_GET['mode'];
 ?>
@@ -13,7 +13,7 @@ $mode = $_GET['mode'];
         <meta charset="utf-8" />
         <meta name="author" content="http://brandanlasley.com" />
         <meta name="viewport" content="width=device-width initial-scale=1.0 maximum-scale=1.0 user-scalable=yes" />
-        <title>Oregon 911 - Social</title>
+        <title>Oregon 911 - Graphs</title>
 
         <link type="text/css" rel="stylesheet" href="css/main.css" />
         <link type="text/css" rel="stylesheet" href="./src/css/jquery.mmenu.all.css" />
@@ -28,8 +28,8 @@ $mode = $_GET['mode'];
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
-                Oregon 911 - Social
+                <a href="#menu" class="main-menu"></a>
+                Oregon 911 - Graphs
             </div>
             <?PHP
             // Emergency Alert Code   
@@ -64,7 +64,7 @@ $mode = $_GET['mode'];
                                 echo('<div style="background-color: #FFF;">');
                             }
                             ?>
-                        <h1> Call Log: <?php echo ($callSum); ?> </h1>
+                        <h1> Graphs:  </h1>
                         <center>
                             <?PHP
                             if (!$mobile) {
@@ -126,9 +126,9 @@ $mode = $_GET['mode'];
                                                         // that in JavaScript, months start at 0 for January, 1 for February etc.
     <?PHP
     if ($days > 0 && $days < 360) {
-        $sql = "SELECT DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, county, COUNT(*) AS total FROM `oregon911_cad`.`pdx911_archive` WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < " . $days . " AND county !='M' and county !='MULTCO' GROUP BY DATE_FORMAT(TIMESTAMP, '%d'), DATE_FORMAT(TIMESTAMP, '%m'), DATE_FORMAT(TIMESTAMP, '%y'), county order by year, month, day, county DESC;";
+        $sql = "SELECT DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, county, COUNT(*) AS total FROM `oregon911_cad`.`pdx911_archive` WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < " . $days . " AND county !='M' and county !='MULTCO' GROUP BY DATE_FORMAT(TIMESTAMP, '%d'), DATE_FORMAT(TIMESTAMP, '%m'), DATE_FORMAT(TIMESTAMP, '%Y'), county order by year, month, day, county DESC;";
     } else {
-        $sql = "SELECT DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, county, COUNT(*) AS total FROM `oregon911_cad`.`pdx911_archive` WHERE TIMESTAMPDIFF(YEAR, timestamp, NOW()) < 1 AND county !='M' and county !='MULTCO' GROUP BY DATE_FORMAT(TIMESTAMP, '%d'), DATE_FORMAT(TIMESTAMP, '%m'), DATE_FORMAT(TIMESTAMP, '%y'), county order by year, month, day, county DESC;";
+        $sql = "SELECT DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, county, COUNT(*) AS total FROM `oregon911_cad`.`pdx911_archive` WHERE TIMESTAMPDIFF(YEAR, timestamp, NOW()) < 1 AND county !='M' and county !='MULTCO' GROUP BY DATE_FORMAT(TIMESTAMP, '%d'), DATE_FORMAT(TIMESTAMP, '%m'), DATE_FORMAT(TIMESTAMP, '%Y'), county order by year, month, day, county DESC;";
     }
     $result = $db->sql_query($sql);
 
@@ -163,9 +163,9 @@ $mode = $_GET['mode'];
                             <?PHP
                             $days = $db->sql_escape(htmlspecialchars(strip_tags($_GET['days'])));
                             if ($days > 0 && $days < 360) {
-                                ?><a href="/statistics/graphs?mode=yearcalls&days=360">Over the year.</a><?PHP
+                                ?><a href="graphs?mode=yearcalls&days=360">Over the year.</a><?PHP
                             } else {
-                                ?><a href="/statistics/graphs?mode=yearcalls&days=30">Over 30 days.</a><?PHP
+                                ?><a href="graphs?mode=yearcalls&days=30">Over 30 days.</a><?PHP
                             }
                             ?>
                             <script type="text/javascript" src="https:////code.highcharts.com/3.0.1/highcharts.js"></script>
@@ -221,21 +221,14 @@ $mode = $_GET['mode'];
                                                 series: [{
                                                 type: 'area',
                                                         name: 'Calls',
-                                                        pointInterval: 24 * 3600 * 1000,
+                                                data: [
     <?PHP
-    $sql = "(Select DATE_FORMAT(MIN(TIMESTAMP), '%Y') AS YEAR, DATE_FORMAT(MIN(TIMESTAMP), '%m') AS MONTH, DATE_FORMAT(MIN(TIMESTAMP), '%d') AS DAY FROM `oregon911_cad`.`pdx911_archive`);";
-    $result = $db->sql_query($sql);
-    $DT = $result->fetch_assoc()
-    ?>
-                                                pointStart: Date.UTC(<?PHP echo($DT['YEAR']) ?>, <?PHP echo($DT['MONTH'] - 1) ?>, <?PHP echo($DT['DAY'] ) ?>),
-                                                        data: [
-    <?PHP
-    $sql = "SELECT IF (COUNT(*) >= 1, COUNT(*), 0) Calls FROM `oregon911_cad`.`pdx911_archive` group by DATE(TIMESTAMP) , DAY(TIMESTAMP) order by TIMESTAMP ASC;";
+    $sql = "SELECT count(*) as Calls, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR FROM `oregon911_cad`.`pdx911_archive` group by DATE(TIMESTAMP) order by TIMESTAMP ASC;";
     $result = $db->sql_query($sql);
 
     $output = '';
     while ($row = $result->fetch_assoc()) {
-        $output .= $row['Calls'] . ",";
+        $output .= "[Date.UTC(" . $row['YEAR'] . ",  " . ($row['MONTH'] - 1) . ", " . $row['DAY'] . "), " . $row['Calls'] . "   ],";
     }
     echo rtrim($output, ",");
     ?>
@@ -295,9 +288,9 @@ $mode = $_GET['mode'];
                                                         // that in JavaScript, months start at 0 for January, 1 for February etc.
     <?PHP
     if ($days > 0 && $days < 120) {
-        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency != '' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < " . $days . " group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%y') order by TIMESTAMP DESC;";
+        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency != '' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < " . $days . " group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%Y') order by TIMESTAMP DESC;";
     } else {
-        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency != '' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < 120 group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%y') order by TIMESTAMP DESC;";
+        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency != '' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < 120 group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%Y') order by TIMESTAMP DESC;";
     }
     $result = $db->sql_query($sql);
 
@@ -332,9 +325,9 @@ $mode = $_GET['mode'];
                             <?PHP
                             $days = $db->sql_escape(htmlspecialchars(strip_tags($_GET['days'])));
                             if ($days > 0 && $days < 360) {
-                                ?><a href="/statistics/graphs?mode=countyaveragetravel&days=360">Over 4 months.</a><?PHP
+                                ?><a href="/graphs?mode=countyaveragetravel&days=360">Over 4 months.</a><?PHP
                             } else {
-                                ?><a href="/statistics/graphs?mode=countyaveragetravel&days=30">Over 30 days.</a><?PHP
+                                ?><a href="/graphs?mode=countyaveragetravel&days=30">Over 30 days.</a><?PHP
                             }
                             ?>
                             <script type="text/javascript" src="https:////code.highcharts.com/3.0.1/highcharts.js"></script>
@@ -385,9 +378,9 @@ $mode = $_GET['mode'];
     while ($agency = $AgenciesList->fetch_assoc()) {
         $output .= ("{ name: '" . $agency['agency'] . "',data: [");
         if ($days > 0 && $days < 360) {
-            $sql = "SELECT `oregon911_cad`.`pdx911_units`.agency, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency = '" . $agency['agency'] . "' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < " . $days . " group by `oregon911_cad`.`pdx911_units`.agency , CONCAT(YEAR(timestamp), '/', WEEK(timestamp)) order by 3 ASC;";
+            $sql = "SELECT `oregon911_cad`.`pdx911_units`.agency, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency = '" . $agency['agency'] . "' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < " . $days . " group by `oregon911_cad`.`pdx911_units`.agency , CONCAT(YEAR(timestamp), '/', WEEK(timestamp)) order by 3 ASC;";
         } else {
-            $sql = "SELECT `oregon911_cad`.`pdx911_units`.agency, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency = '" . $agency['agency'] . "' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < 360 group by `oregon911_cad`.`pdx911_units`.agency , CONCAT(YEAR(timestamp), '/', WEEK(timestamp)) order by 3 ASC;";
+            $sql = "SELECT `oregon911_cad`.`pdx911_units`.agency, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency = '" . $agency['agency'] . "' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < 360 group by `oregon911_cad`.`pdx911_units`.agency , CONCAT(YEAR(timestamp), '/', WEEK(timestamp)) order by 3 ASC;";
         }
         $internel_output = '';
         $result = $db->sql_query($sql);
@@ -411,9 +404,9 @@ $mode = $_GET['mode'];
                             <?PHP
                             $days = $db->sql_escape(htmlspecialchars(strip_tags($_GET['days'])));
                             if ($days > 0 && $days < 360) {
-                                ?><a href="/statistics/graphs?mode=averagetravel&days=120">Over 4 months.</a><?PHP
+                                ?><a href="/graphs?mode=averagetravel&days=120">Over 4 months.</a><?PHP
                             } else {
-                                ?><a href="/statistics/graphs?mode=averagetravel&days=30">Over 30 days.</a><?PHP
+                                ?><a href="/graphs?mode=averagetravel&days=30">Over 30 days.</a><?PHP
                             }
                             ?>
                             <script type="text/javascript" src="https:////code.highcharts.com/3.0.1/highcharts.js"></script>
@@ -467,9 +460,9 @@ $mode = $_GET['mode'];
                                                 series: [
     <?PHP
     if ($days > 0 && $days < 360) {
-        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, count(`oregon911_cad`.`pdx911_archive`.callSum) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '" . $days . "' AND callSum = '" . $calltype . "' group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%y') order by TIMESTAMP DESC";
+        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, count(`oregon911_cad`.`pdx911_archive`.callSum) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '" . $days . "' AND callSum = '" . $calltype . "' group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%Y') order by TIMESTAMP DESC";
     } else {
-        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, count(`oregon911_cad`.`pdx911_archive`.callSum) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '7' AND callSum = '" . $calltype . "' group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%y') order by TIMESTAMP DESC";
+        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, count(`oregon911_cad`.`pdx911_archive`.callSum) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '7' AND callSum = '" . $calltype . "' group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%Y') order by TIMESTAMP DESC";
     }
     $result = $db->sql_query($sql);
     while ($row = $result->fetch_assoc()) {
@@ -540,9 +533,9 @@ $mode = $_GET['mode'];
                             $days = $db->sql_escape(htmlspecialchars(strip_tags($_GET['days'])));
                             if ($days > 0 && $days < 360) {
                                 if ($days == 30) {
-                                    ?><a href="/statistics/graphs?mode=calltypevolume&days=7&calltype=<?PHP echo($_GET['calltype']); ?>">Over 7 days.</a><?PHP
+                                    ?><a href="/graphs?mode=calltypevolume&days=7&calltype=<?PHP echo($_GET['calltype']); ?>">Over 7 days.</a><?PHP
                                 } else {
-                                    ?><a href="/statistics/graphs?mode=calltypevolume&days=30&calltype=<?PHP echo($_GET['calltype']); ?>">Over 30 days.</a><?PHP
+                                    ?><a href="/graphs?mode=calltypevolume&days=30&calltype=<?PHP echo($_GET['calltype']); ?>">Over 30 days.</a><?PHP
                                 }
                             }
                             ?>
@@ -595,9 +588,9 @@ $mode = $_GET['mode'];
     while ($agency = $AgenciesList->fetch_assoc()) {
         $output .= ("{ name: '" . $agency['agency'] . "',data: [");
         if ($days > 0 && $days < 360) {
-            $sql = "SELECT `oregon911_cad`.`pdx911_units`.agency, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency = '" . $agency['agency'] . "' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < " . $days . " group by `oregon911_cad`.`pdx911_units`.agency , CONCAT(YEAR(timestamp), '/', WEEK(timestamp)) order by 3 ASC;";
+            $sql = "SELECT `oregon911_cad`.`pdx911_units`.agency, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency = '" . $agency['agency'] . "' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < " . $days . " group by `oregon911_cad`.`pdx911_units`.agency , CONCAT(YEAR(timestamp), '/', WEEK(timestamp)) order by 3 ASC;";
         } else {
-            $sql = "SELECT `oregon911_cad`.`pdx911_units`.agency, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency = '" . $agency['agency'] . "' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < 360 group by `oregon911_cad`.`pdx911_units`.agency , CONCAT(YEAR(timestamp), '/', WEEK(timestamp)) order by 3 ASC;";
+            $sql = "SELECT `oregon911_cad`.`pdx911_units`.agency, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, ROUND(AVG((IF(onscene >= enroute, TIME_TO_SEC(TIMEDIFF(onscene, enroute)) / 60, IF(TIME_TO_SEC(TIMEDIFF(onscene, enroute))/3600 > 20, ((UNIX_TIMESTAMP(DATE_ADD((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', onscene), '%Y-%d-%c %T')), INTERVAL 1 DAY)) - UNIX_TIMESTAMP((STR_TO_DATE(CONCAT(DATE(TIMESTAMP), ' ', enroute), '%Y-%d-%c %T')))) / 60), 0)))) , 2) as AVG_R FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE `oregon911_cad`.`pdx911_units`.county != 'M' AND `oregon911_cad`.`pdx911_units`.county != 'MULTCO' AND `oregon911_cad`.`pdx911_units`.agency = '" . $agency['agency'] . "' AND `oregon911_cad`.`pdx911_units`.onscene != '00:00:00' AND `oregon911_cad`.`pdx911_units`.enroute != '00:00:00' AND TIMESTAMPDIFF(DAY, timestamp, NOW()) < 360 group by `oregon911_cad`.`pdx911_units`.agency , CONCAT(YEAR(timestamp), '/', WEEK(timestamp)) order by 3 ASC;";
         }
         $internel_output = '';
         $result = $db->sql_query($sql);
@@ -661,9 +654,9 @@ $mode = $_GET['mode'];
                                                 series: [
     <?PHP
     if ($days > 0 && $days < 360) {
-        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, count(*) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '" . $days . "' AND (callSum = 'TRF ACC, UNK INJ' OR callSum = 'TRF ACC, INJURY' OR callSum = 'TAU' OR callSum = 'MVA-INJURY ACCID' OR callSum = 'TRF ACC, NON-INJ' OR callSum = 'TAI-TRAPPED VICT' OR callSum = 'TAI-HIGH MECHANI' OR callSum = 'TAI-PT NOT ALERT' OR callSum = 'MVA-UNK INJURY') group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%y') order by TIMESTAMP DESC";
+        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, count(*) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '" . $days . "' AND (callSum = 'TRF ACC, UNK INJ' OR callSum = 'TRF ACC, INJURY' OR callSum = 'TAU' OR callSum = 'MVA-INJURY ACCID' OR callSum = 'TRF ACC, NON-INJ' OR callSum = 'TAI-TRAPPED VICT' OR callSum = 'TAI-HIGH MECHANI' OR callSum = 'TAI-PT NOT ALERT' OR callSum = 'MVA-UNK INJURY') group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%Y') order by TIMESTAMP DESC";
     } else {
-        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, count(*) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '7' AND (callSum = 'TRF ACC, UNK INJ' OR callSum = 'TRF ACC, INJURY' OR callSum = 'TAU' OR  callSum = 'MVA-INJURY ACCID' OR callSum = 'TRF ACC, NON-INJ' OR callSum = 'TAI-TRAPPED VICT' OR callSum = 'TAI-HIGH MECHANI' OR callSum = 'TAI-PT NOT ALERT' OR callSum = 'MVA-UNK INJURY') group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%y') order by TIMESTAMP DESC";
+        $sql = "SELECT `oregon911_cad`.`pdx911_units`.county, DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, count(*) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '7' AND (callSum = 'TRF ACC, UNK INJ' OR callSum = 'TRF ACC, INJURY' OR callSum = 'TAU' OR  callSum = 'MVA-INJURY ACCID' OR callSum = 'TRF ACC, NON-INJ' OR callSum = 'TAI-TRAPPED VICT' OR callSum = 'TAI-HIGH MECHANI' OR callSum = 'TAI-PT NOT ALERT' OR callSum = 'MVA-UNK INJURY') group by `oregon911_cad`.`pdx911_units`.county , DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%Y') order by TIMESTAMP DESC";
     }
     $result = $db->sql_query($sql);
     while ($row = $result->fetch_assoc()) {
@@ -674,9 +667,9 @@ $mode = $_GET['mode'];
         }
     }
     if ($days > 0 && $days < 360) {
-        $sql = "SELECT DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, count(*) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '" . $days . "' AND (callSum = 'TRF ACC, UNK INJ' OR callSum = 'TRF ACC, INJURY' OR callSum = 'MVA-INJURY ACCID' OR callSum = 'TAU' OR callSum = 'TRF ACC, NON-INJ' OR callSum = 'TAI-TRAPPED VICT' OR callSum = 'TAI-HIGH MECHANI' OR callSum = 'TAI-PT NOT ALERT' OR callSum = 'MVA-UNK INJURY') group by DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%y') order by TIMESTAMP DESC";
+        $sql = "SELECT DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, count(*) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '" . $days . "' AND (callSum = 'TRF ACC, UNK INJ' OR callSum = 'TRF ACC, INJURY' OR callSum = 'MVA-INJURY ACCID' OR callSum = 'TAU' OR callSum = 'TRF ACC, NON-INJ' OR callSum = 'TAI-TRAPPED VICT' OR callSum = 'TAI-HIGH MECHANI' OR callSum = 'TAI-PT NOT ALERT' OR callSum = 'MVA-UNK INJURY') group by DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%Y') order by TIMESTAMP DESC";
     } else {
-        $sql = "SELECT DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%y') AS YEAR, count(*) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '7' AND (callSum = 'TRF ACC, UNK INJ' OR callSum = 'TRF ACC, INJURY' OR callSum = 'MVA-INJURY ACCID' OR callSum = 'TAU' OR callSum = 'TRF ACC, NON-INJ' OR callSum = 'TAI-TRAPPED VICT' OR callSum = 'TAI-HIGH MECHANI' OR callSum = 'TAI-PT NOT ALERT' OR callSum = 'MVA-UNK INJURY') group by DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%y') order by TIMESTAMP DESC";
+        $sql = "SELECT DATE_FORMAT(TIMESTAMP, '%d') AS DAY, DATE_FORMAT(TIMESTAMP, '%m') AS MONTH, DATE_FORMAT(TIMESTAMP, '%Y') AS YEAR, count(*) as RESULT FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county WHERE TIMESTAMPDIFF(DAY, timestamp, NOW()) < '7' AND (callSum = 'TRF ACC, UNK INJ' OR callSum = 'TRF ACC, INJURY' OR callSum = 'MVA-INJURY ACCID' OR callSum = 'TAU' OR callSum = 'TRF ACC, NON-INJ' OR callSum = 'TAI-TRAPPED VICT' OR callSum = 'TAI-HIGH MECHANI' OR callSum = 'TAI-PT NOT ALERT' OR callSum = 'MVA-UNK INJURY') group by DATE_FORMAT(TIMESTAMP, '%d') , DATE_FORMAT(TIMESTAMP, '%m') , DATE_FORMAT(TIMESTAMP, '%Y') order by TIMESTAMP DESC";
     }
     $result = $db->sql_query($sql);
     while ($row = $result->fetch_assoc()) {
@@ -728,12 +721,12 @@ $mode = $_GET['mode'];
 
                             if ($days > 0 && $days < 360) {
                                 if ($days == 30) {
-                                    ?><a href="/statistics/graphs?mode=accidinjnoninj&days=7">Over 7 days.</a><?PHP
+                                    ?><a href="/graphs?mode=accidinjnoninj&days=7">Over 7 days.</a><?PHP
                                 } else {
-                                    ?><a href="/statistics/graphs?mode=accidinjnoninj&days=30">Over 30 days.</a><?PHP
+                                    ?><a href="/graphs?mode=accidinjnoninj&days=30">Over 30 days.</a><?PHP
                                 }
                             } else {
-                                ?><a href="/statistics/graphs?mode=accidinjnoninj&days=30">Over 30 days.</a><?PHP
+                                ?><a href="/graphs?mode=accidinjnoninj&days=30">Over 30 days.</a><?PHP
                             }
                             ?>
 

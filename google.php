@@ -28,6 +28,18 @@ $ad_336_280 = '
 </script>
 ';
 
+$matched_content_ad =
+'<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- Matched Content OR911 -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-4799522447106781"
+     data-ad-slot="8443212571"
+     data-ad-format="autorelaxed"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>';
+
 $ad_320_100 = '
 <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 <!-- OR911 Banner New -->

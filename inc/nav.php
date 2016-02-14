@@ -21,6 +21,8 @@
                     <li><a>Maps</a>
                         <ul>
                             <li><a href = "./maps?mode=24hr">Last 24 Hours</a></li>
+                            <li><a href = "./maps?mode=fireworks">Last 24 Hours Fireworks</a></li>
+                            <li><a href = "./maps?mode=accidents">Last 2 Months Car Accidents</a></li>
                     </li>
                 </ul>
             </li>
@@ -37,7 +39,6 @@
             <li><a>Tables</a>
                 <ul>
                     <li><a href = "./tables?mode=avgtraveltable">Agency Response Time</a></li>
-                    <li><a href = "./tables?mode=avgunit">Average unit per call</a>
                     <li><a href = "./tables?mode=calltypes">Call Types</a>
                     <li><a href = "./tables?mode=dispatchflags">Flags/Misc</a>
                     </li>

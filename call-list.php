@@ -3,7 +3,7 @@ $time = microtime();
 $time = explode(' ', $time);
 $time = $time[1] + $time[0];
 $start = $time;
-require_once("loggedin.php");
+require_once("database.php");
 require_once("google.php");
 
 if ($_GET['AJAX_REFRESH'] == "W") {
@@ -111,7 +111,7 @@ if ($_GET['AJAX_REFRESH'] == "W") {
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
+                <a href="#menu" class="main-menu"></a>
                 Oregon 911 - Incident List
             </div>
             <?PHP
@@ -204,7 +204,7 @@ if ($_GET['AJAX_REFRESH'] == "W") {
                         $total_time = round(($finish - $start), 4);
                         echo '<p>Page generated in ' . $total_time . ' seconds.</p>';
                         echo ('<br>');
-                        echo '<p>Copyright &copy; ' . date("Y") . ' Brandan Lasley. All Rights Reserved.</p>';
+                        echo '<p>Copyright &copy; ' . date("Y") . ' Oregon 911. All Rights Reserved.</p>';
                         //    echo '<p>The material on this site may not be reproduced, distributed, transmitted, cached or otherwise used, except with the prior written permission of Brandan Lasley.</p>';
                         ?>
                         <?PHP

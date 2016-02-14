@@ -9,7 +9,7 @@ header('Cache-Control: no-cache, no-store, must-revalidate'); // HTTP 1.1.
 header('Pragma: no-cache'); // HTTP 1.0.
 header('Expires: 0'); // Proxies.
 
-require_once("loggedin.php");
+require_once("database.php");
 
 $CallIDM = 1;
 $CAD911 = array();
@@ -79,15 +79,27 @@ while ($rows = $result->fetch_assoc()) {
 $sql = "SELECT * FROM `oregon911_cad`.`pdx911_calls` WHERE county != 'M' ORDER BY type";
 $result = $db->sql_query($sql);
 while ($rows = $result->fetch_assoc()) {
-    $info_string = '<div>' . '<h1> Call: ' . $rows['callSum'] . '</h1>' . '<h3> Address: ' . $rows['address'] . '</h3>' . '<p>Station: ' . $rows['station'] . '</p>' . '<p> Time: ' . $rows['timestamp'] . '</p>' . '<table style="width:100%;"><tr><th>Unit</th><th>Station</th><th>Dispatched</th><th>Enroute<th>Onscene</th><th>Clear</th>';
-    $sql = "SELECT * FROM `oregon911_cad`.`pdx911_units` WHERE GUID='" . $rows['GUID'] . "' and type='" . $rows['type'] . "' and county='" . $rows['county'] . "' and county != 'M'";
-    $unit_result = $db->sql_query($sql);
-    while ($unit_row = $unit_result->fetch_assoc()) {
-        $info_string .= '<tr><th>' . $unit_row['unit'] . '</th><th>' . $unit_row['station'] . '</th><th>' . $unit_row['dispatched'] . '</th><th>' . $unit_row['enroute'] . '<th>' . $unit_row['onscene'] . '</th><th>' . $unit_row['clear'] . '</th></tr>';
+    $info_string = '<div>' . '<h1> Call: ' . $rows['callSum'] . '</h1>' . '<h3> Address: ' . $rows['address'] . '</h3>' . '<p>Station: ' . $rows['station'] . '</p>' . '<p> Time: ' . $rows['timestamp'] . '</p><p> Units: ';
+    $sql = "Select * from `oregon911_cad`.`pdx911_units` WHERE GUID = '" . $rows['GUID'] . "' AND county = '" . $rows['county'] . "'";
+    $result2 = $db->sql_query($sql);
+    $UOUTPUT = '';
+    while ($unit = $result2->fetch_assoc()) {
+     if ($unit['clear'] != '00:00:00') {
+         $UOUTPUT .= '<span class="clear" title="Cleared @ ' . $unit['clear'] . '">' . $unit['unit'] . '</span>, ';
+     } else if ($unit['onscene'] != '00:00:00') {
+         $UOUTPUT .= '<span class="onscene" title="Onscene @ ' . $unit['onscene'] . '">' . $unit['unit'] . '</span>, ';
+     } else if ($unit['enroute'] != '00:00:00') {
+         $UOUTPUT .= '<span class="enroute" title="Enroute @ ' . $unit['enroute'] . '">' . $unit['unit'] . '</span>, ';
+     } else if ($unit['dispatched'] != '00:00:00') {
+         $UOUTPUT .= '<span class="dispatched" title="Dispatched @ ' . $unit['dispatched'] . '">' . $unit['unit'] . '</span>, ';
+     }
     }
-    $info_string .= '</table>';
+    $UOUTPUT =  substr($UOUTPUT, 0, -2) . "</p>"; 
+    
+    $info_string .= $UOUTPUT;
+    
     $info_string .= ('<a href="./units?call=' . $rows['GUID'] . '&county=' . $rows['county'] . '" target="_blank">More Info</a></div>');
-    //if ($rows['ID'] != 31682) {
+    
     $CAD911['loc' . $rows['ID']] = array(
         'info' => $info_string,
         'lat' => $rows['lat'],
@@ -99,7 +111,6 @@ while ($rows = $result->fetch_assoc()) {
         'labelname' => $rows['callSum'],
         'icon' => $rows['icon']
     );
-    //}
 }
 
 

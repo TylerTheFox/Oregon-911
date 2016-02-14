@@ -3,7 +3,7 @@ $time = microtime();
 $time = explode(' ', $time);
 $time = $time[1] + $time[0];
 $start = $time;
-require_once("loggedin.php");
+require_once("database.php");
 require_once("google.php");
 
 $county = strtoupper($db->sql_escape(strip_tags($_GET['county'])));
@@ -31,7 +31,7 @@ $station = strtoupper($db->sql_escape(strip_tags($_GET['station'])));
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
+                <a href="#menu" class="main-menu"></a>
                 Oregon 911 - Station
             </div>
             <?PHP
@@ -340,7 +340,7 @@ $station = strtoupper($db->sql_escape(strip_tags($_GET['station'])));
                         $finish = $time;
                         $total_time = round(($finish - $start), 4);
                         echo '<p>Page generated in ' . $total_time . ' seconds.</p>';
-                        echo '<p>Copyright &copy; ' . date("Y") . ' Brandan Lasley. All Rights Reserved.</p>';
+                        echo '<p>Copyright &copy; ' . date("Y") . ' Oregon 911. All Rights Reserved.</p>';
                         ?>
                         <?PHP
                         if (!$mobile) {
@@ -477,7 +477,10 @@ echo "var latLongHeat = [" . rtrim($GeoOutput, ',') . "];";
 
             var pointArray = new google.maps.MVCArray(Data);
                     heatmap = new google.maps.visualization.HeatmapLayer({
-                    data: pointArray
+                        dissipating: true,
+                        map: map,
+                        radius: 100,
+                        data: pointArray
                     });
                     heatmap.setMap(map);
             }

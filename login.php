@@ -57,7 +57,7 @@ if ($user->data['username'] == 'Anonymous' OR $user->data['is_bot']) {
         <body>
             <div id="page">
                 <div class="header">
-                    <a href="#menu"></a>
+                    <a href="#menu" class="main-menu"></a>
                     Oregon 911 - Social
                 </div>
                 <?PHP

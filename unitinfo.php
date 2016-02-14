@@ -3,7 +3,7 @@ $time = microtime();
 $time = explode(' ', $time);
 $time = $time[1] + $time[0];
 $start = $time;
-require_once("loggedin.php");
+require_once("database.php");
 require_once("google.php");
 
 $county = strtoupper($db->sql_escape(strip_tags($_GET['county'])));
@@ -31,7 +31,7 @@ $unit = strtoupper($db->sql_escape(strip_tags($_GET['unit'])));
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
+                <a href="#menu" class="main-menu"></a>
                 Oregon 911 - Unit Info
             </div>
             <?PHP

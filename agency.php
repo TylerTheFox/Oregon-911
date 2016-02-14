@@ -3,7 +3,7 @@ $time = microtime();
 $time = explode(' ', $time);
 $time = $time[1] + $time[0];
 $start = $time;
-require_once("loggedin.php");
+require_once("database.php");
 require_once("google.php");
 
 $county = strtoupper($db->sql_escape(strip_tags($_GET['county'])));
@@ -31,8 +31,8 @@ $agency = strtoupper($db->sql_escape(strip_tags($_GET['agency'])));
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
-                Oregon 911 - Media
+                <a href="#menu" class="main-menu"></a>
+                Oregon 911 - Agency
             </div>
             <?PHP
             // Emergency Alert Code   
@@ -113,15 +113,15 @@ $agency = strtoupper($db->sql_escape(strip_tags($_GET['agency'])));
                                     echo("<td>" . $rows['AVG_R'] . " Minutes</td>");
                                     ?>
                                 </tr>
-                                <tr>
+                                <!--<tr>
                                     <th scope="row">Average Call Distance</th>
                                     <td><?php
-                                        $sql = "Select ROUND(AVG(geodistance(S.LAT, S.LON, C.lat, C.lon) * 0.000621371), 2) as miles from `oregon911_cad`.pdx911_units as U, `oregon911_cad`.pdx911_archive as C, `oregon911_cad`.`pdx911_stations` as S WHERE S.DISTRICT = '" . $agency . "' and C.county = '" . $county . "' AND U.GUID = C.GUID AND U.county = C.county AND S.abbv = U.station AND U.onscene != '00:00:00' AND U.enroute != '00:00:00';";
+                                       /* $sql = "Select ROUND(AVG(geodistance(S.LAT, S.LON, C.lat, C.lon) * 0.000621371), 2) as miles from `oregon911_cad`.pdx911_units as U, `oregon911_cad`.pdx911_archive as C, `oregon911_cad`.`pdx911_stations` as S WHERE S.DISTRICT = '" . $agency . "' and C.county = '" . $county . "' AND U.GUID = C.GUID AND U.county = C.county AND S.abbv = U.station AND U.onscene != '00:00:00' AND U.enroute != '00:00:00';";
                                         $result = $db->sql_query($sql);
                                         $rows = $db->sql_fetchrow($result);
-                                        echo($rows['miles'] . " Miles");
+                                        echo($rows['miles'] . " Miles");*/
                                         ?></td>
-                                </tr>
+                                </tr>-->
                                 <tr>
                                     <th scope="row">Number of stations</th>
                                     <td><?php
@@ -177,16 +177,16 @@ $agency = strtoupper($db->sql_escape(strip_tags($_GET['agency'])));
 
                         </details>
 
-                        <details <?PHP
-                        if ($county == "W") {
+                        <!--  <details <?PHP
+                        /*if ($county == "W") {
                             echo ('class="wccca-details"');
                         } else {
                             echo ('class="ccom-details"');
-                        }
+                        }*/
                         ?> open=true>
-                            <summary>Heat Map</summary>
+                          <summary>Heat Map</summary>
                             <div id="heatmap" style="width:100%; height:300px;"></div>
-                        </details>   
+                        </details>   -->
 
                         <details <?PHP
                         if ($county == "W") {
@@ -198,6 +198,26 @@ $agency = strtoupper($db->sql_escape(strip_tags($_GET['agency'])));
                             <summary>Average Response Time</summary>
                             <div id="yearavgunit" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
                         </details>
+                        
+                        <details <?PHP
+                        if ($county == "W") {
+                            echo ('class="wccca-details"');
+                        } else {
+                            echo ('class="ccom-details"');
+                        }
+                        ?> open=true>
+                            <summary>Stations</summary>
+                            <?php
+                            echo '<table style="width:100%;">';
+                            echo '<tr><th>Station #:</th><th>Abbreviation</th><th>Address</th><th>City</th></tr>';
+                            $sql = "SELECT * FROM oregon911_cad.pdx911_stations WHERE DISTRICT = '$agency' order by CITY asc;";
+                            $result = $db->sql_query($sql);
+                            while ($row = $result->fetch_assoc()) {
+                                echo '<tr><th><a href="/station?station=' . $row['ABBV'] . '&county=' . $row['COUNTY'] . '">' . $row['STATION'] . '</a></th><th>' . $row['ABBV'] . '</th><th>' . $row['ADDRESS'] . '</th><th>' . $row['CITY'] . '</th></tr>';
+                            }
+                            echo '</table>';
+                            ?>
+                        </details>  
 
                         <details <?PHP
                         if ($county == "W") {
@@ -279,7 +299,7 @@ $agency = strtoupper($db->sql_escape(strip_tags($_GET['agency'])));
                         </div>
 
                     <?PHP }
-                     echo '<p>Copyright &copy; ' . date("Y") . ' Brandan Lasley. All Rights Reserved.</p>';?>
+                     echo '<p>Copyright &copy; ' . date("Y") . ' Oregon 911. All Rights Reserved.</p>';?>
                 </div>
             </div>
 
@@ -372,80 +392,6 @@ if ($county == "C") {
                             }]
                     });
                     });</script>
-        <script>
-<?php
-$sql = "SELECT `oregon911_cad`.`pdx911_archive`.LAT, `oregon911_cad`.`pdx911_archive`.LON FROM `oregon911_cad`.`pdx911_units` JOIN `oregon911_cad`.`pdx911_archive` ON `oregon911_cad`.`pdx911_units`.GUID = `oregon911_cad`.`pdx911_archive`.GUID AND `oregon911_cad`.`pdx911_units`.county = `oregon911_cad`.`pdx911_archive`.county LEFT JOIN `oregon911_cad`.`pdx911_stations` AS S ON `oregon911_cad`.`pdx911_units`.station = S.ABBV and `oregon911_cad`.`pdx911_units`.county = S.county WHERE onscene != '00:00:00' AND enroute != '00:00:00' AND `oregon911_cad`.`pdx911_units`.county = '" . $county . "' AND S.DISTRICT = '" . $agency . "' AND TIMESTAMPDIFF(YEAR, timestamp, NOW()) < 1";
-$result = $db->sql_query($sql);
-$GeoOutput = '';
-
-while ($row = $result->fetch_assoc()) {
-    $GeoOutput .= "[" . $row['LAT'] . "," . $row['LON'] . "],";
-}
-
-echo "var latLongHeat = [" . rtrim($GeoOutput, ',') . "];";
-?>
-
-
-            function initialize() {
-            $("#map-canvas").height(screen.height / 2);
-                    $("#map-canvas").width(screen.width / 2);
-                    // TODO: center should be dynamically calculated via agency data, zoom too
-
-                    var mapOptions = {
-                    zoom: 10,
-                            center: new google.maps.LatLng(45.4461, - 122.6392),
-                            mapTypeId: google.maps.MapTypeId.MAP
-                    };
-                    map = new google.maps.Map(document.getElementById('heatmap'),
-                            mapOptions);
-                    var Data = [];
-                    var mapData = latLongHeat; // JSON.parse is extra work
-
-                    for (var i = 0; i < mapData.length; i++) {
-            var t = new google.maps.LatLng(mapData[i][0], mapData[i][1]);
-                    Data[i] = t;
-            }
-
-            var pointArray = new google.maps.MVCArray(Data);
-                    heatmap = new google.maps.visualization.HeatmapLayer({
-                    data: pointArray
-                    });
-                    heatmap.setMap(map);
-            }
-
-            function toggleHeatmap() {
-            heatmap.setMap(heatmap.getMap() ? null : map);
-            }
-
-            function changeGradient() {
-            var gradient = [
-                    'rgba(0, 255, 255, 0)',
-                    'rgba(0, 255, 255, 1)',
-                    'rgba(0, 191, 255, 1)',
-                    'rgba(0, 127, 255, 1)',
-                    'rgba(0, 63, 255, 1)',
-                    'rgba(0, 0, 255, 1)',
-                    'rgba(0, 0, 223, 1)',
-                    'rgba(0, 0, 191, 1)',
-                    'rgba(0, 0, 159, 1)',
-                    'rgba(0, 0, 127, 1)',
-                    'rgba(63, 0, 91, 1)',
-                    'rgba(127, 0, 63, 1)',
-                    'rgba(191, 0, 31, 1)',
-                    'rgba(255, 0, 0, 1)'
-            ]
-                    heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
-            }
-
-            function changeRadius() {
-            heatmap.set('radius', heatmap.get('radius') ? null : 20);
-            }
-
-            function changeOpacity() {
-            heatmap.set('opacity', heatmap.get('opacity') ? null : 0.2);
-            }
-
-            google.maps.event.addDomListener(window, 'load', initialize);</script>
         <?PHP echo($analytics); ?>
         <script type="text/javascript" src="//www.google.com/jsapi"></script>
     </body>

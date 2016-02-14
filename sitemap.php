@@ -25,15 +25,15 @@ echo("\n");
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>http://cad.oregon911.net/statistics/maps</loc>
+        <loc>http://cad.oregon911.net/maps</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>http://cad.oregon911.net/statistics/tables</loc>
+        <loc>http://cad.oregon911.net/tables</loc>
         <changefreq>always</changefreq>
     </url>
     <url>
-        <loc>http://cad.oregon911.net/statistics/graphs</loc>
+        <loc>http://cad.oregon911.net/graphs</loc>
         <changefreq>always</changefreq>
     </url>
     <url>

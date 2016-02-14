@@ -1,5 +1,5 @@
 <?PHP
-require_once("loggedin.php");
+require_once("database.php");
 require_once("google.php");
 ?>
 <!DOCTYPE html>
@@ -23,7 +23,7 @@ require_once("google.php");
     <body>
         <div id="page">
             <div class="header">
-                <a href="#menu"></a>
+                <a href="#menu" class="main-menu"></a>
                 Oregon 911 - Contact
             </div>
             <?PHP
