@@ -408,11 +408,11 @@ if ($found) {
     if (isset($_GET['zoom'])) {
         $zoom = $_GET['zoom'];
     }
-    $H = 270;
+    $H = 280;
     if (isset($_GET['H'])) {
         $H = $_GET['H'];
     }
-    $W = 540;
+    $W = 550;
     if (isset($_GET['W'])) {
         $W = $_GET['W'];
     }
