@@ -1,0 +1,16 @@
+details[open] summary 
+{
+    background: #C82620;
+    color: #FFF;
+}
+
+#page-wrapper 
+{
+    position: relative;
+    width: 75%;
+    padding: 1em;
+    background: #FFFFFF;
+    margin: 1em auto;
+    border-top: 5px solid #C82620;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}

@@ -25,13 +25,13 @@ $map = new staticMapLiteEx(array(
 
                             /* add your own sources as you see fit */
                             'mapSources' => array(
-	                            'mapnik' => 'http://www.server2.oregon911.net/osm/{Z}/{X}/{Y}.png',
+	                            'mapnik' => 'http://tile.openstreetmap.org/{Z}/{X}/{Y}.png',
 
 	                            /* this is an example map source - {Z} is zoom level,
 	                            {X} corresponds to longitude (East to West), {Y} corresponds to latitude (North to South)
 	                            @see http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#X_and_Y
 	                            */
-	                            'example' => 'http://www.server2.oregon911.net/osm/{Z}/{X}/{Y}.png',
+	                            'example' => 'http://tile.openstreetmap.org/{Z}/{X}/{Y}.png',
                             ),
 
                             'cache' => array(

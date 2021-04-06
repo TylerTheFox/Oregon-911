@@ -1,0 +1,48 @@
+.dispatched 
+{
+    color: #C82620;
+}
+
+.enroute 
+{
+    color: #FFCC33;
+}
+
+.onscene 
+{
+    color: green;
+}
+
+.clear 
+{
+    color: #787878;
+}
+
+.dispatchedDetail
+{
+    background-color:#C82620;
+    color:white;
+}
+
+.enrouteDetail
+{
+    background-color:#FFCC33;
+    color:black;
+}
+
+.onsceneDetail 
+{
+    background-color:green; 
+    color:white;
+}
+
+.clearDetail
+{
+    background-color:#787878; 
+    color:white;
+}
+
+.noneDetail
+{
+    
+}
