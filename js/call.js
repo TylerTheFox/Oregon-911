@@ -1,10 +1,12 @@
 // Angular JS stuff
-var app = angular.module('OR911_CALLS', ['ngRoute', 'angularCSS']);
+var app = angular.module('OR911_CALLS', ['ngRoute', 'angularCSS', 'ng.deviceDetector']);
 
-app.controller('callController', function ($scope, $css, $http)
+app.controller('callController', function ($scope, $css, $http, deviceDetector)
 {
     
     $scope.InitalLoadComplete = false;
+    $scope.callValid = true;
+    $scope.isMobile = deviceDetector.isMobile();
     
     $scope.MainTheme = 
     [  
@@ -135,54 +137,57 @@ app.controller('callController', function ($scope, $css, $http)
     {
         var themeName = "WCCCA FIRE";
         
-        if ($scope.IncidentData.Header.callType === "F")
+        if ($scope.callValid)
         {
-            if ($scope.IncidentData.Header.callCounty === "W")
+            if ($scope.IncidentData.Header.callType === "F")
             {
-                themeName = "WCCCA FIRE";
-            } 
-            else if ($scope.IncidentData.Header.callCounty === "C")
+                if ($scope.IncidentData.Header.callCounty === "W")
+                {
+                    themeName = "WCCCA FIRE";
+                } 
+                else if ($scope.IncidentData.Header.callCounty === "C")
+                {
+                    themeName = "CCOM MEDICAL";
+                }
+                else
+                {
+                    console.log("Error Unknown County!");
+                }
+            }
+            else if ($scope.IncidentData.Header.callType === "M")
             {
-                themeName = "CCOM MEDICAL";
+                if ($scope.IncidentData.Header.callCounty === "W")
+                {
+                    themeName = "WCCCA MEDICAL";
+                } 
+                else if ($scope.IncidentData.Header.callCounty === "C")
+                {
+                    themeName = "CCOM MEDICAL";
+                }
+                else
+                {
+                    console.log("Error Unknown County!");
+                }
+            }
+            else if ($scope.IncidentData.Header.callType === "P")
+            {
+                if ($scope.IncidentData.Header.callCounty === "W")
+                {
+                    themeName = "WCCCA POLICE";
+                } 
+                else if ($scope.IncidentData.Header.callCounty === "C")
+                {
+                    themeName = "CCOM POLICE";
+                }
+                else
+                {
+                    console.log("Error Unknown County!");
+                }
             }
             else
             {
-                console.log("Error Unknown County!");
+                console.log("Error Unknown Call Type!");
             }
-        }
-        else if ($scope.IncidentData.Header.callType === "M")
-        {
-            if ($scope.IncidentData.Header.callCounty === "W")
-            {
-                themeName = "WCCCA MEDICAL";
-            } 
-            else if ($scope.IncidentData.Header.callCounty === "C")
-            {
-                themeName = "CCOM MEDICAL";
-            }
-            else
-            {
-                console.log("Error Unknown County!");
-            }
-        }
-        else if ($scope.IncidentData.Header.callType === "P")
-        {
-            if ($scope.IncidentData.Header.callCounty === "W")
-            {
-                themeName = "WCCCA POLICE";
-            } 
-            else if ($scope.IncidentData.Header.callCounty === "C")
-            {
-                themeName = "CCOM POLICE";
-            }
-            else
-            {
-                console.log("Error Unknown County!");
-            }
-        }
-        else
-        {
-            console.log("Error Unknown Call Type!");
         }
         
         // Remove all stylesheets
@@ -204,42 +209,7 @@ app.controller('callController', function ($scope, $css, $http)
         });
     }
     
-    $scope.ResolveUnitDetailClasses  = function(type, unit)
-    {
-        var ret             = $scope.UnitDetailStatusClass[0];
-        var highestClear    = 0;
-        
-        if (type > 4 || type < 0)
-        {
-            console.log("Error unknown unit detail type");
-        }
-
-        if (unit.clear !== null)
-        {
-            highestClear = 4;
-        } 
-        else if (unit.onscene !== null)
-        {
-            highestClear = 3;
-        }
-        else if (unit.enroute !== null)
-        {
-            highestClear = 2;
-        }
-        else if (unit.dispatched !== null)
-        {
-            highestClear = 1;
-        }
-        
-        if (highestClear === type)
-        {
-            ret = $scope.UnitDetailStatusClass[highestClear];
-        }
-
-        return ret;
-    }
-    
-    $scope.ResolveUnitStatusClasses  = function(unit)
+    $scope.FindUnitHighestClearStatus  = function(unit)
     {
         var highestClear = 0;
         
@@ -260,7 +230,51 @@ app.controller('callController', function ($scope, $css, $http)
             highestClear = 0;
         }
         
-        return $scope.UnitTextStatusClass[highestClear];
+        return highestClear;
+    }
+    
+    $scope.ResolveUnitDetailClasses  = function(type, unit)
+    {
+        var ret             = $scope.UnitDetailStatusClass[0];
+        var highestClear    = $scope.FindUnitHighestClearStatus(unit) + 1;
+        
+        if (type > 4 || type < 0)
+        {
+            console.log("Error unknown unit detail type");
+        }
+        
+        if (highestClear === type)
+        {
+            ret = $scope.UnitDetailStatusClass[highestClear];
+        }
+        
+        return ret;
+    }
+    
+    $scope.ResolveUnitStatusClasses  = function(unit)
+    {
+        return $scope.UnitTextStatusClass[$scope.FindUnitHighestClearStatus(unit)];
+    }
+    
+    $scope.GetUnitsHighestClearStatusTime  = function(unit)
+    {
+        var highestClear    = $scope.FindUnitHighestClearStatus(unit);
+        var clearTxt        = unit.clear;
+        
+        if      (highestClear === 0)
+        {
+            clearTxt = unit.clear;
+        }
+        else if (highestClear === 1)
+        {
+            clearTxt = unit.clear;
+        }
+        else if (highestClear === 2)
+        {
+            clearTxt = unit.clear;
+        }
+        
+        return clearTxt;
     }
     
     
@@ -307,12 +321,26 @@ app.controller('callController', function ($scope, $css, $http)
            });
     }
     
-    $scope.parseJSON(callJSONStr);
-    $scope.ResolveTheme();
-    
-    setInterval(function () 
+    if (callJSONStr.length === 0)
     {
-        $scope.reloadData();
-    }, 30000);
+        // Call Invalid!
+        $scope.callValid = false;
+        
+        // Just put center of the map at WCCCA
+        map.panTo(new L.LatLng(45.5367631, -122.860186));
+        
+        // Zoom in 
+        map.setZoom(12);
+    }
+    else
+    {
+        // Call Valid!
+        $scope.parseJSON(callJSONStr);
+        setInterval(function () 
+        {
+            $scope.reloadData();
+        }, 30000);
+    }
     
+    $scope.ResolveTheme();
 });

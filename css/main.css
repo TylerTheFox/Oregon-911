@@ -92,9 +92,19 @@ th, td {
     border-bottom: 1px solid #E6E6E6;
 }
 
-th {
-    width: 200px;
+th 
+{
+    width: 85px;
 }
+
+@media only screen and (min-width: 768px) 
+{
+    th 
+    {
+        width: 200px;
+    }
+}
+
 
 a {
     color: #08C;

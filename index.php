@@ -5,7 +5,7 @@
         <meta name="author" content="Brandan Tyler Lasley" />
         <meta name="viewport" content="width=device-width initial-scale=1.0 maximum-scale=1.0 user-scalable=yes" />
         
-        <title>Oregon 911 - Home</title>
+        <title>Oregon 911 - Notice</title>
         
         <meta name="viewport" content="width=device-width, initial-scale=1">
         
@@ -16,7 +16,7 @@
     <body>
         <div id="page">
             <div class="header">
-                <p>Oregon 911 - Home</p>
+                <p>Oregon 911 - Notice</p>
             </div>
             
             <div class="content">
@@ -29,10 +29,8 @@
                             <p> Due to WCCCA discontinuing the public CAD system this service is no longer available </p>
                             <p> The calls page will be the only functioning remaining page </p>
                         </details>
-                        
-                        <!-- ====================================================================================== -->
                         <?php
-                            echo '<p>Copyright &copy; ' . date("Y") . ' Oregon 911. All Rights Reserved.</p>';
+                            echo "<p>Copyright &copy; " . date("Y") . " Oregon 911. All Rights Reserved.</p>\n";
                         ?>
                     </div>
                 </div>

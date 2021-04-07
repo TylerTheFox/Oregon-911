@@ -18,7 +18,7 @@ function getIncidentData($callNum, $callCounty, $callType)
     $callHeaderData = $db->getCallHeader($callNum, $callCounty, $callType);
     if (count($callHeaderData) != 1)
     {
-        return null;
+        return json_encode(null);
     }
     
     $callLogData = $db->getCallLog($callNum, $callCounty);
